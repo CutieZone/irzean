@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>{%- if title is defined and title %}Irzean - {{title}}{%- else %}Irzean{%- endif %}</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  {%- if description is defined and description %}
+  <meta name="description" content="{{description}}" />
+  {%- else %}
+  <meta name="description" content="A dumping ground for random writings." />
+  {%- endif %}
+
+  <link rel="stylesheet" type="text/css" href="/style/main.css" />
+  {%- block head %}{%endblock head%}
+</head>
+
+<body>
+  {%- include "html/header.jinja" %}
+  <main>
+    {%- block body %} {% endblock body %}
+  </main>
+  {%- include "html/footer.jinja" %}
+  {%- if scripts %}{%- for script in scripts %}
+  <script lang="{{script.lang}}" src="/script/{{script.path}}"></script>
+  {% endfor %}
+  {% endif %}
+</body>
+
+</html>

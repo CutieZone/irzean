@@ -25,7 +25,9 @@
         overlays = [(import rust-overlay)];
       };
 
-      rust = pkgs.pkgsBuildHost.rust-bin.beta.latest.default;
+      rust = pkgs.pkgsBuildHost.rust-bin.beta.latest.default.override {
+        extensions = ["rust-analyzer" "rust-src"];
+      };
     in {
       devShells.default = pkgs.mkShell {
         nativeBuildInputs = with pkgs; [
@@ -34,6 +36,7 @@
           rust
           bacon
           mold
+          cargo-watch
 
           cmake
           clang

@@ -1,0 +1,6 @@
+{
+  "rust-analyzer.server.path": "/nix/store/79lf2fc4dn78pm38k141hmi1942xhpjp-rust-default-1.85.0-beta.5-2025-01-21/bin/rust-analyzer",
+  "jinja-lsp.lang": "rust",
+  "jinja-lsp.backend": ["./src"],
+  "jinja-lsp.templates": "./templates"
+}

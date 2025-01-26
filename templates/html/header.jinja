@@ -1,0 +1,7 @@
+<header>
+  {%- if links is defined and links %}{%- for link in links %}
+  <a href="{{link.uri}}" target="_blank" referrerpolicy="no-referrer">{{link.name}}</a>
+  {%- endfor %}{%- else %}
+  <p>This is where links would go... if there were any.</p>
+  {%- endif%}
+</header>
