@@ -1,3 +1,6 @@
 # Flake Stuff
 /.direnv
 /result
+
+# Rust Stuff
+/target
