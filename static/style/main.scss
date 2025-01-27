@@ -235,3 +235,19 @@ pre {
     width: 80%;
   }
 }
+
+blockquote {
+  display: flex;
+  justify-content: center;
+  justify-items: center;
+
+  border: 0px;
+  border-radius: 1em;
+  background-color: $bg-accent;
+  padding: 0.75em 0.4em;
+
+  p::before {
+    content: "> ";
+    color: c.transparentize($color: $col, $amount: 0.3);
+  }
+}

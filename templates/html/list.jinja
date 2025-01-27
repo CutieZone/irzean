@@ -22,17 +22,16 @@
     <details>
       <summary>Description/Summary</summary>
       <p>{{writing.description}}</p>
+
+      <ul class="flex row tags">
+        {%- for tag in writing.tags %}
+        <li class="tag">
+          <a href="{{ tag_url_for(tag) }}" target="_self" referrerpolicy="noreferrer">{{tag}}</a>
+        </li>
+        {%- endfor %}
+      </ul>
     </details>
     {%- endif%}
-
-    <ul class="flex row tags">
-      {%- for tag in writing.tags %}
-      <li class="tag">
-        <a href="{{ tag_url_for(tag) }}" target="_self" referrerpolicy="noreferrer">{{tag}}</a>
-      </li>
-      {%- endfor %}
-    </ul>
-
     {%- else %}
     <a href="{{ writing_url_for(writing) }}" target="_self" referrerpolicy="noreferrer">
       <h2>{{writing.title}}</h2>
@@ -43,16 +42,18 @@
     <details>
       <summary>Description/Summary</summary>
       <p>{{writing.description}}</p>
+
+      <ul class="flex row tags">
+        {%- for tag in writing.tags %}
+        <li class="tag">
+          <a href="{{ tag_url_for(tag) }}" target="_self" referrerpolicy="noreferrer">{{tag}}</a>
+        </li>
+        {%- endfor %}
+      </ul>
     </details>
     {%- endif%}
 
-    <ul class="flex row tags">
-      {%- for tag in writing.tags %}
-      <li class="tag">
-        <a href="{{ tag_url_for(tag) }}" target="_self" referrerpolicy="noreferrer">{{tag}}</a>
-      </li>
-      {%- endfor %}
-    </ul>
+
     {%- endif %}
     <hr />
   </li>
