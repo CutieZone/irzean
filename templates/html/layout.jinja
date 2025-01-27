@@ -4,7 +4,7 @@
 <head>
   {%- if title is defined and title %}
   <title>Irzean - {{title}}</title>
-  <meta property="og:title" content="Irzean - {{title}}" />
+  <meta property="og:title" content="Irzean - {{title|e}}" />
   {%- else %}
   <title>Irzean</title>
   <meta property="og:title" content="Irzean" />
@@ -30,8 +30,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   {%- if description is defined and description %}
-  <meta name="description" content="{{description}}" />
-  <meta property="og:description" content="{{description}}" />
+  <meta name="description" content="{{description}|e}" />
+  <meta property="og:description" content="{{description|e}}" />
   {%- else %}
   <meta name="description" content="A dumping ground for random writings." />
   <meta property="og:description" content="A dumping ground for random writings." />
