@@ -73,13 +73,6 @@
         inherit (common) src nativeBuildInputs cargoExtraArgs;
 
         inherit cargoArtifacts;
-
-        postFixup = ''
-          mkdir -p $out/var/irzean
-
-          cp -r $src/templates $out/var/irzean/templates
-          cp -r $src/static $out/var/irzean/static
-        '';
       };
     in {
       devShells.default = pkgs.mkShell {
@@ -109,16 +102,12 @@
             name = "root";
 
             paths = [bin pkgs.cacert pkgs.dumb-init];
-            pathsToLink = ["/bin" "/var" "/etc"];
+            pathsToLink = ["/bin" "/etc"];
           };
 
           config = {
             Entrypoint = ["${pkgs.dumb-init}/bin/dumb-init" "--"];
             Cmd = ["${bin}/bin/irzean"];
-            Env = [
-              "IRZEAN_TEMPLATE_DIR=/var/irzean/templates"
-              "IRZEAN_STATIC_DIR=/var/irzean/static"
-            ];
           };
         };
       };

@@ -1,16 +1,17 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use std::{env, net::SocketAddr, sync::Arc, time::Duration};
+use std::{env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
 
 use axum::{Router, routing::get};
 use color_eyre::eyre::{Context, OptionExt};
 use fossil::RepoHandler;
 use minijinja::{Environment, context};
-use tokio::{fs, net::TcpListener, sync::RwLock, time};
+use tokio::{net::TcpListener, sync::RwLock, time};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
 use tracing_subscriber::{EnvFilter, fmt};
+use util::Templates;
 
 mod err;
 mod fossil;
@@ -79,7 +80,7 @@ async fn run() -> color_eyre::Result<()> {
         .parse::<SocketAddr>()
         .context("Couldn't parse `0.0.0.0:1337`")?;
 
-    let mut jinja_env = build_jinja_env().await?;
+    let mut jinja_env = build_jinja_env()?;
     let mut repo_handler = RepoHandler::init()?;
     repo_handler.update()?;
 
@@ -89,7 +90,7 @@ async fn run() -> color_eyre::Result<()> {
 
     insert_links(&mut jinja_env);
 
-    let css_hash = util::hash_scss().await?;
+    let css_hash = util::hash_scss();
 
     jinja_env.add_global("css_hash", &css_hash);
 
@@ -130,6 +131,9 @@ async fn run() -> color_eyre::Result<()> {
 
 fn insert_links(env: &mut Environment<'static>) {
     let root_uri = root_url();
+    info!(
+        "Using the root URI `{root_uri}`. To override, use the `IRZEAN_ROOT_URL` environment variable"
+    );
     let mut links = vec![];
 
     links.push(context! {
@@ -156,44 +160,28 @@ fn insert_links(env: &mut Environment<'static>) {
     env.add_global("links", links);
 }
 
-async fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
+fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
     let mut jinja_env = Environment::new();
 
-    let template_dir =
-        env::var("IRZEAN_TEMPLATE_DIR").unwrap_or_else(|_| "./templates".to_string());
+    let template_paths = Templates::iter().filter(|v| v.starts_with("html/"));
 
-    debug!(?template_dir, "Using");
-
-    let template_dir = template_dir + "/html";
-
-    let mut read_dir = fs::read_dir(template_dir)
-        .await
-        .context("Couldn't read template path.")?;
-
-    while let Some(entry) = read_dir.next_entry().await? {
-        let path = entry.path();
-
-        if !path.exists() || !path.is_file() {
+    for path in template_paths {
+        let Some(data) = Templates::get(&path) else {
+            warn!("Could not find template data for {path}");
             continue;
-        }
+        };
 
-        let file_name = path
-            .as_path()
+        let path_buf = PathBuf::from(path.as_ref());
+        let file_name = path_buf
             .file_name()
-            .ok_or_eyre("no file name, should be there though")?;
+            .ok_or_eyre("no file name even if there should be one")?;
         let file_name = file_name.to_str().ok_or_eyre("could not convert to str")?;
 
-        if let Some(ext) = path.extension() {
-            if !ext.eq_ignore_ascii_case("jinja") {
-                continue;
-            }
+        if file_name.ends_with("jinja") {
+            debug!(?path, "Adding template {file_name} as `{path}`");
 
-            debug!(?path, "Adding template {file_name} as `html/{file_name}`");
-
-            jinja_env.add_template_owned(
-                format!("html/{file_name}"),
-                fs::read_to_string(&path).await?,
-            )?;
+            jinja_env
+                .add_template_owned(path.to_string(), String::from_utf8(data.data.to_vec())?)?;
         }
     }
 

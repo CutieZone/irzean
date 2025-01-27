@@ -1,8 +1,4 @@
-use std::{
-    env,
-    path::{Component, Path, PathBuf},
-    sync::Arc,
-};
+use std::sync::Arc;
 
 use axum::{
     body::Body,
@@ -10,11 +6,15 @@ use axum::{
     http::{Method, StatusCode, Uri},
     response::{Html, IntoResponse, Redirect, Response},
 };
-use color_eyre::eyre::OptionExt;
+use color_eyre::{Report, eyre::OptionExt};
 use serde::Deserialize;
 use tracing::{debug, warn};
 
-use crate::{AppState, err::Error, util::tokio_fs::TokioFs};
+use crate::{
+    AppState,
+    err::Error,
+    util::{Statics, tokio_fs::TokioFs},
+};
 
 mod templates;
 
@@ -154,44 +154,24 @@ pub async fn style(
         return Ok(Redirect::permanent(&format!("/style/{name}?v={}", s.css_hash)).into_response());
     }
 
-    let base_path = static_path();
-    let mut base_path: PathBuf = (base_path + "/style").into();
-    base_path.push(&name);
+    let base_path = format!("style/{name}").replace(".css", ".scss");
 
-    if check_for_traversal(&base_path) {
-        warn!(?base_path, ?name, "Attempted path traversal. Blocking.");
-        return Ok(not_found(uri, s).await.into_response());
-    }
+    if let Some(data) = Statics::get(&base_path) {
+        let string = String::from_utf8(data.data.to_vec()).map_err(Report::from)?;
+        let rendered = grass::from_string(&string, &grass_options())?;
 
-    base_path.set_extension("scss");
-
-    if !base_path.exists() {
+        Response::builder()
+            .status(StatusCode::OK)
+            .header("content-type", "text/css")
+            .header("cache-control", "public, max-age=31536000, immutable")
+            .body(Body::from(rendered))
+            .map_err(Into::into)
+    } else {
         debug!(?base_path, ?name, "Couldn't find a style there...");
-        return Ok(not_found(uri, s).await.into_response());
+        Ok(not_found(uri, s).await.into_response())
     }
-
-    let rendered = grass::from_path(&base_path, &grass_options())?;
-
-    Response::builder()
-        .status(StatusCode::OK)
-        .header("content-type", "text/css")
-        .header("cache-control", "public, max-age=31536000, immutable")
-        .body(Body::from(rendered))
-        .map_err(Into::into)
-}
-
-/// Returns `true` if there's any path traversal attempts.
-fn check_for_traversal(path: &Path) -> bool {
-    // We skip 1 because if it *is* a RootDir, that's fine. We just want to know if anywhere ELSE there's problems.
-    path.components()
-        .skip(1)
-        .any(|x| matches!(x, Component::ParentDir | Component::RootDir))
 }
 
 fn grass_options() -> grass::Options<'static> {
     grass::Options::default().fs(&TokioFs)
-}
-
-fn static_path() -> String {
-    env::var("IRZEAN_STATIC_DIR").unwrap_or_else(|_| "./static".to_string())
 }

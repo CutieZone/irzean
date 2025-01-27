@@ -18,6 +18,7 @@ git2 = { version = "0.20.0", features = [
 ] }
 grass = "0.13.4"
 minijinja = { version = "2.6.0", features = ["loader", "speedups"] }
+rust-embed = { version = "8.5.0", features = ["axum", "compression"] }
 serde = { version = "1.0.217", features = ["derive"] }
 slug = "0.1.6"
 tokio = { version = "1.43", features = ["full"] }

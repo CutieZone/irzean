@@ -8,7 +8,7 @@ use std::{
 };
 
 use async_walkdir::{Filtering, WalkDir};
-use color_eyre::eyre::{OptionExt, eyre};
+use color_eyre::eyre::{Context, OptionExt, eyre};
 use futures_lite::StreamExt;
 use git2::{
     Cred, FetchOptions, RemoteCallbacks, Repository,
@@ -40,8 +40,10 @@ impl RepoHandler {
     pub fn init() -> Res<Self> {
         const REPO_URL: &str = "https://git.cutie.zone/Lyssieth/irzean-writings";
 
-        let access_token = env::var("IRZEAN_ACCESS_TOKEN")?;
-        let clone_path: PathBuf = env::var("IRZEAN_CLONE_PATH")?.into();
+        let access_token = env::var("IRZEAN_ACCESS_TOKEN").context("IRZEAN_ACCESS_TOKEN")?;
+        let clone_path: PathBuf = env::var("IRZEAN_CLONE_PATH")
+            .context("IRZEAN_CLONE_PATH")?
+            .into();
 
         let repo = if clone_path.exists() {
             info!("`irzean-writings` opened from {clone_path:?}");

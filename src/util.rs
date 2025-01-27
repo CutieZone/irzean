@@ -1,20 +1,16 @@
-use std::{
-    env,
-    path::{Component, Path, PathBuf},
-};
+use std::path::{Component, Path};
 
-use async_walkdir::{Filtering, WalkDir};
 use blake3::Hasher;
 use comrak::{Arena, Options, Plugins};
-use futures_lite::StreamExt;
 use minijinja::{Error, ErrorKind, value::ViaDeserialize};
 use slug::slugify;
-use tokio::fs;
-use tracing::debug;
+use tracing::{debug, warn};
 
 use crate::{fossil::Writing, root_url};
 
+mod embed;
 pub mod tokio_fs;
+pub use embed::{Statics, Templates};
 
 #[allow(clippy::unnecessary_wraps)]
 pub fn tag_url_for(name: &str) -> Result<String, Error> {
@@ -95,36 +91,19 @@ pub fn to_markdown(input: &str) -> Result<String, Error> {
         .map_err(|e| Error::new(ErrorKind::SyntaxError, format!("Invalid UTF8. {e}")))
 }
 
-pub async fn hash_scss() -> color_eyre::Result<String> {
-    let root = PathBuf::from(env::var("IRZEAN_STATIC_DIR")?).join("style/");
-
-    let mut walk = WalkDir::new(&root).filter(async |v| {
-        if v.path()
-            .extension()
-            .unwrap_or_default()
-            .eq_ignore_ascii_case("scss")
-        {
-            Filtering::Continue
-        } else {
-            Filtering::Ignore
-        }
-    });
+pub fn hash_scss() -> String {
+    let items = Statics::iter().filter(|v| v.ends_with("scss"));
 
     let mut hasher = Hasher::new();
 
-    while let Some(entry) = walk.try_next().await? {
-        let path = entry.path();
-
-        if !path.exists() {
+    for path in items {
+        let Some(data) = Statics::get(&path) else {
+            warn!("No data found for {path}");
             continue;
-        }
+        };
 
-        let data = fs::read(path).await?;
-
-        hasher.update(&data);
+        hasher.update(&data.data);
     }
 
-    let hash = hasher.finalize().to_hex().to_string();
-
-    Ok(hash)
+    hasher.finalize().to_hex().to_string()
 }
