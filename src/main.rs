@@ -55,6 +55,7 @@ async fn main() {
 pub struct AppState {
     pub jinja_env: Environment<'static>,
     pub repo_handler: Arc<RwLock<RepoHandler>>,
+    pub css_hash: String,
 }
 
 async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
@@ -88,9 +89,14 @@ async fn run() -> color_eyre::Result<()> {
 
     insert_links(&mut jinja_env);
 
+    let css_hash = util::hash_scss().await?;
+
+    jinja_env.add_global("css_hash", &css_hash);
+
     let app_state = AppState {
         jinja_env,
         repo_handler,
+        css_hash,
     };
 
     let router = Router::new()

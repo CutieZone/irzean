@@ -1,8 +1,15 @@
-use std::path::{Component, Path};
+use std::{
+    env,
+    path::{Component, Path, PathBuf},
+};
 
+use async_walkdir::{Filtering, WalkDir};
+use blake3::Hasher;
 use comrak::{Arena, Options, Plugins};
+use futures_lite::StreamExt;
 use minijinja::{Error, ErrorKind, value::ViaDeserialize};
 use slug::slugify;
+use tokio::fs;
 use tracing::debug;
 
 use crate::{fossil::Writing, root_url};
@@ -81,4 +88,38 @@ pub fn to_markdown(input: &str) -> Result<String, Error> {
 
     String::from_utf8(output)
         .map_err(|e| Error::new(ErrorKind::SyntaxError, format!("Invalid UTF8. {e}")))
+}
+
+pub async fn hash_scss() -> color_eyre::Result<String> {
+    let root = PathBuf::from(env::var("IRZEAN_STATIC_DIR")?).join("style/");
+
+    let mut walk = WalkDir::new(&root).filter(async |v| {
+        if v.path()
+            .extension()
+            .unwrap_or_default()
+            .eq_ignore_ascii_case("scss")
+        {
+            Filtering::Continue
+        } else {
+            Filtering::Ignore
+        }
+    });
+
+    let mut hasher = Hasher::new();
+
+    while let Some(entry) = walk.try_next().await? {
+        let path = entry.path();
+
+        if !path.exists() {
+            continue;
+        }
+
+        let data = fs::read(path).await?;
+
+        hasher.update(&data);
+    }
+
+    let hash = hasher.finalize().to_hex().to_string();
+
+    Ok(hash)
 }

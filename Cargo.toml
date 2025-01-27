@@ -8,6 +8,7 @@ resolver = "3"
 [dependencies]
 async-walkdir = "2.0.0"
 axum = { version = "0.8", features = ["macros", "multipart"] }
+blake3 = "1.5.5"
 color-eyre = "0.6.3"
 comrak = "0.35"
 futures-lite = "2.6.0"
