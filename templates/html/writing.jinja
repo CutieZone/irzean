@@ -13,7 +13,7 @@ You should probably not link this to others without consent."><code>[HIDDEN]</co
 <h2><code>{{writing.date_authored}}</code></h2>
 <ul class="flex row tags">
   {%- for tag in writing.tags %}
-  <li><code>{{tag}}</code></li>
+  <li><a href="{{ tag_url_for(tag) }}" target="_blank" referrerpolicy="noreferrer"><code>{{tag}}</code></a></li>
   {%- endfor %}
 </ul>
 <hr />
