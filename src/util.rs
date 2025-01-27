@@ -66,6 +66,11 @@ pub fn writing_url_for(writing: ViaDeserialize<Writing>) -> Result<String, Error
 }
 
 #[allow(clippy::unnecessary_wraps)]
+pub fn writing_url_from(slugified: &str) -> Result<String, Error> {
+    Ok(format!("{}/writing/{}", root_url(), slugified))
+}
+
+#[allow(clippy::unnecessary_wraps)]
 pub fn to_markdown(input: &str) -> Result<String, Error> {
     let arena = Arena::new();
     let mut options = Options::default();

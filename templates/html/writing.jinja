@@ -16,10 +16,27 @@ You should probably not link this to others without consent."><code>[HIDDEN]</co
   <li><a href="{{ tag_url_for(tag) }}" target="_blank" referrerpolicy="noreferrer"><code>{{tag}}</code></a></li>
   {%- endfor %}
 </ul>
+{%- if (writing.previous is defined and writing.previous) or (writing.next is defined and writing.next) %}
+<div class="series-selector flex row">
+  {%- if writing.previous is defined and writing.previous %}
+  <a class="previous" href="{{ writing_url_from(writing.previous)}}" target="_self"
+    referrerpolicy="noreferrer">Previous</a>
+  {%- else %}
+  <a class="previous" title="There is no previous part to this series." disabled target="_self"
+    referrerpolicy="noreferrer">Previous</a>
+  {%- endif %}
+  {%- if writing.next is defined and writing.next %}
+  <a class="next" href="{{ writing_url_from(writing.next)}}" target="_self" referrerpolicy="noreferrer">Next</a>
+  {%- else %}
+  <a class="next" title="There is no next part to this series." disabled target="_self"
+    referrerpolicy="noreferrer">Next</a>
+  {%- endif %}
+</div>
+{%- endif %}
 <hr />
 
 {%- set markdown = to_markdown(writing.content)|safe %}
 <div class="md flex col">
-{{ markdown }}
+  {{ markdown }}
 </div>
 {%- endblock body %}

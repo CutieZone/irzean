@@ -161,6 +161,9 @@ impl RepoHandler {
 
             let description = doc["description"].as_str().map(ToString::to_string);
 
+            let previous = doc["previous"].as_str().map(ToString::to_string);
+            let next = doc["next"].as_str().map(ToString::to_string);
+
             list.push(Writing {
                 rel_path: relative.to_path_buf(),
                 title: title.to_string(),
@@ -170,9 +173,9 @@ impl RepoHandler {
                 tags,
                 is_nsfw,
                 is_hidden,
+                previous,
+                next,
             });
-
-            // debug!(item = ?list.last(), "Pushed");
         }
 
         list.sort_by_cached_key(|v| v.date_authored);
@@ -284,6 +287,8 @@ pub struct Writing {
     pub is_nsfw: bool,
     pub is_hidden: bool,
     pub content: String,
+    pub previous: Option<String>,
+    pub next: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

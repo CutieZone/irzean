@@ -199,6 +199,7 @@ async fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
 
     jinja_env.add_function("tag_url_for", util::tag_url_for);
     jinja_env.add_function("writing_url_for", util::writing_url_for);
+    jinja_env.add_function("writing_url_from", util::writing_url_from);
     jinja_env.add_function("to_markdown", util::to_markdown);
 
     Ok(jinja_env)

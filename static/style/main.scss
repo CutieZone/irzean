@@ -251,3 +251,26 @@ blockquote {
     color: c.transparentize($color: $col, $amount: 0.3);
   }
 }
+
+div.series-selector {
+  justify-content: space-between;
+  width: 40%;
+
+  a.previous::before {
+    content: "<- ";
+  }
+
+  a.previous[disabled] {
+    color: c.darken($col, 20%);
+    text-decoration: 1px solid black line-through;
+  }
+
+  a.next::after {
+    content: " ->";
+  }
+
+  a.next[disabled] {
+    color: c.darken($col, 20%);
+    text-decoration: 1px solid black line-through;
+  }
+}
