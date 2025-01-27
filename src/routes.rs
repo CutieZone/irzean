@@ -6,11 +6,12 @@ use std::{
 
 use axum::{
     body::Body,
-    extract::{Path as UriPath, State},
+    extract::{Path as UriPath, Query, State},
     http::{Method, StatusCode, Uri},
-    response::{Html, IntoResponse, Response},
+    response::{Html, IntoResponse, Redirect, Response},
 };
 use color_eyre::eyre::OptionExt;
+use serde::Deserialize;
 use tracing::{debug, warn};
 
 use crate::{AppState, err::Error, util::tokio_fs::TokioFs};
@@ -137,12 +138,22 @@ pub async fn method_not_allowed(
     Ok((StatusCode::METHOD_NOT_ALLOWED, Html(rendered)))
 }
 
+#[derive(Debug, Deserialize)]
+pub struct CacheBust {
+    pub v: String,
+}
+
 #[axum::debug_handler]
 pub async fn style(
     UriPath(name): UriPath<String>,
+    Query(v): Query<CacheBust>,
     uri: Uri,
     s: State<Arc<AppState>>,
 ) -> Result<Response, Error> {
+    if v.v != s.css_hash {
+        return Ok(Redirect::permanent(&format!("/style/{name}?v={}", s.css_hash)).into_response());
+    }
+
     let base_path = static_path();
     let mut base_path: PathBuf = (base_path + "/style").into();
     base_path.push(&name);
@@ -164,6 +175,7 @@ pub async fn style(
     Response::builder()
         .status(StatusCode::OK)
         .header("content-type", "text/css")
+        .header("cache-control", "public, max-age=31536000, immutable")
         .body(Body::from(rendered))
         .map_err(Into::into)
 }
