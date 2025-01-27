@@ -1,0 +1,16 @@
+labels:
+  platform: linux/aarch64
+
+when:
+  - event: push
+    branch: main
+
+steps:
+  - name: Build and push
+    image: git.cutie.zone/lyssieth/baseimages:nix-docker
+    commands:
+      - nix-fast-build -f .#packages.aarch64-linux.dockerImage.copyToRegistry --no-nom
+      - ./result-/bin/copy-to-registry --dest-creds "${CI_REPO_OWNER}:$DOCKER_TOKEN"
+    environment:
+      DOCKER_TOKEN:
+        from_secret: DOCKER_TOKEN
