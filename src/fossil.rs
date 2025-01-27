@@ -179,6 +179,7 @@ impl RepoHandler {
         }
 
         list.sort_by_cached_key(|v| v.date_authored);
+        list.reverse();
 
         Ok(list)
     }
