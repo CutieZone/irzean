@@ -45,7 +45,16 @@
 
       cl = (crane.mkLib pkgs).overrideToolchain rust;
 
-      src = cl.cleanCargoSource (cl.path ./.);
+      templateFilter = path: _type: builtins.match ".*\.jinja$" path != null;
+      styleFilter = path: _type: builtins.match ".*\.scss" path != null;
+
+      mineOrCargo = path: type: (templateFilter path type) || (styleFilter path type) || (cl.filterCargoSources path type);
+
+      src = pkgs.lib.cleanSourceWith {
+        src = ./.;
+        filter = mineOrCargo;
+        name = "sources";
+      };
 
       common = {
         inherit src;
@@ -64,6 +73,13 @@
         inherit (common) src nativeBuildInputs cargoExtraArgs;
 
         inherit cargoArtifacts;
+
+        postFixup = ''
+          mkdir -p $out/var/irzean
+
+          cp -r $src/templates $out/var/irzean/templates
+          cp -r $src/static $out/var/irzean/static
+        '';
       };
     in {
       devShells.default = pkgs.mkShell {
@@ -81,30 +97,8 @@
         ];
       };
 
-      packages = rec {
+      packages = {
         default = bin;
-
-        extras = pkgs.stdenvNoCC.mkDerivation {
-          name = "irzean-extras";
-          version = bin.version;
-
-          src = ./.;
-
-          doCheck = false;
-          doFixup = false;
-          doBuild = false;
-
-          installPhase = ''
-            runHook preInstall
-
-            mkdir -p $out/var/irzean
-
-            cp -r $src/templates $out/var/irzean/templates
-            cp -r $src/static $out/var/irzean/static
-
-            runHook postInstall
-          '';
-        };
 
         dockerImage = pkgs.nix2container.buildImage {
           name = "git.cutie.zone/lyssieth/irzean";
@@ -114,7 +108,7 @@
           copyToRoot = pkgs.buildEnv {
             name = "root";
 
-            paths = [bin pkgs.cacert extras pkgs.dumb-init];
+            paths = [bin pkgs.cacert pkgs.dumb-init];
             pathsToLink = ["/bin" "/var" "/etc"];
           };
 

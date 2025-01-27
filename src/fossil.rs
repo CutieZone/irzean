@@ -197,7 +197,7 @@ impl RepoHandler {
         let mut tags = HashMap::new();
 
         let writings = self.file_list().await?;
-        for writing in &writings {
+        for writing in writings.iter().filter(|v| !v.is_hidden) {
             for tag in &writing.tags {
                 tags.entry(tag.clone()).and_modify(|v| *v += 1).or_insert(1);
             }
@@ -205,11 +205,17 @@ impl RepoHandler {
 
         tags.insert(
             "nsfw".to_string(),
-            writings.iter().filter(|v| v.is_nsfw).count() as u64,
+            writings
+                .iter()
+                .filter(|v| v.is_nsfw && !v.is_hidden)
+                .count() as u64,
         );
         tags.insert(
             "sfw".to_string(),
-            writings.iter().filter(|v| !v.is_nsfw).count() as u64,
+            writings
+                .iter()
+                .filter(|v| !v.is_nsfw && !v.is_hidden)
+                .count() as u64,
         );
 
         Ok(tags)
