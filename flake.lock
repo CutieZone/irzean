@@ -15,6 +15,29 @@
         "type": "github"
       }
     },
+    "n2c": {
+      "inputs": {
+        "flake-utils": [
+          "utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1730479402,
+        "narHash": "sha256-79NLeNjpCa4mSasmFsE3QA6obURezF0TUO5Pm+1daog=",
+        "owner": "nlewo",
+        "repo": "nix2container",
+        "rev": "5fb215a1564baa74ce04ad7f903d94ad6617e17a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nlewo",
+        "repo": "nix2container",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1737717945,
@@ -34,6 +57,7 @@
     "root": {
       "inputs": {
         "crane": "crane",
+        "n2c": "n2c",
         "nixpkgs": "nixpkgs",
         "rust-overlay": "rust-overlay",
         "utils": "utils"

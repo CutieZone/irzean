@@ -2,14 +2,44 @@
 <html lang="en">
 
 <head>
-  <title>{%- if title is defined and title %}Irzean - {{title}}{%- else %}Irzean{%- endif %}</title>
+  {%- if title is defined and title %}
+  <title>Irzean - {{title}}</title>
+  <meta property="og:title" content="Irzean - {{title}}" />
+  {%- else %}
+  <title>Irzean</title>
+  <meta property="og:title" content="Irzean" />
+  {%- endif %}
+  <meta name="theme-color" content="#dcb6e4" />
+
+  <meta property="og:site_name" content="Irzean" />
+
+  {%- if type is defined and type %}
+  <meta property="og:type" content="{{type}}" />
+
+  {%- if article is defined and article %}
+  <meta property="og:article:published_time" content="{{article.published_time}}" />
+  <meta property="og:article:author" content="{{article.author}}" />
+  {%- for tag in article.tags%}
+  <meta property="og:article:tag" content="{{tag}}" />
+  {%- endfor %}
+  {%- endif %}
+  {%- else %}
+  <meta property="og:type" content="website" />
+  {%- endif %}
+
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   {%- if description is defined and description %}
   <meta name="description" content="{{description}}" />
+  <meta property="og:description" content="{{description}}" />
   {%- else %}
   <meta name="description" content="A dumping ground for random writings." />
+  <meta property="og:description" content="A dumping ground for random writings." />
   {%- endif %}
+
+  {%- if url is defined and url %}
+  <meta property="og:url" content="{{url}}" />
+  {%- endif%}
 
   <link rel="stylesheet" type="text/css" href="/style/main.css" />
   {%- block head %}{%endblock head%}

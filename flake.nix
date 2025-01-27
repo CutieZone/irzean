@@ -10,23 +10,60 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     crane.url = "github:ipetkov/crane";
+
+    n2c = {
+      url = "github:nlewo/nix2container";
+
+      inputs.flake-utils.follows = "utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     nixpkgs,
     utils,
     rust-overlay,
+    n2c,
+    crane,
     ...
   }:
     utils.lib.eachDefaultSystem (system: let
       pkgs = import nixpkgs {
         inherit system;
 
-        overlays = [(import rust-overlay)];
+        overlays = [
+          (import rust-overlay)
+          (final: prev: {
+            inherit (n2c.packages.${system}) nix2container;
+          })
+        ];
       };
 
       rust = pkgs.pkgsBuildHost.rust-bin.beta.latest.default.override {
         extensions = ["rust-analyzer" "rust-src"];
+      };
+
+      cl = (crane.mkLib pkgs).overrideToolchain rust;
+
+      src = cl.cleanCargoSource (cl.path ./.);
+
+      common = {
+        inherit src;
+        nativeBuildInputs = with pkgs; [
+          rust
+          mold
+          clang
+          perl
+        ];
+
+        cargoExtraArgs = "--locked --no-default-features --features production";
+      };
+
+      cargoArtifacts = cl.buildDepsOnly common;
+      bin = cl.buildPackage {
+        inherit (common) src nativeBuildInputs cargoExtraArgs;
+
+        inherit cargoArtifacts;
       };
     in {
       devShells.default = pkgs.mkShell {
@@ -42,6 +79,54 @@
           clang
           pkg-config
         ];
+      };
+
+      packages = rec {
+        default = bin;
+
+        extras = pkgs.stdenvNoCC.mkDerivation {
+          name = "irzean-extras";
+          version = bin.version;
+
+          src = ./.;
+
+          doCheck = false;
+          doFixup = false;
+          doBuild = false;
+
+          installPhase = ''
+            runHook preInstall
+
+            mkdir -p $out/var/irzean
+
+            cp -r $src/templates $out/var/irzean/templates
+            cp -r $src/static $out/var/irzean/static
+
+            runHook postInstall
+          '';
+        };
+
+        dockerImage = pkgs.nix2container.buildImage {
+          name = "git.cutie.zone/lyssieth/irzean";
+          tag = "latest";
+
+          maxLayers = 20;
+          copyToRoot = pkgs.buildEnv {
+            name = "root";
+
+            paths = [bin pkgs.cacert extras pkgs.dumb-init];
+            pathsToLink = ["/bin" "/var" "/etc"];
+          };
+
+          config = {
+            Entrypoint = ["${pkgs.dumb-init}/bin/dumb-init" "--"];
+            Cmd = ["${bin}/bin/irzean"];
+            Env = [
+              "IRZEAN_TEMPLATE_DIR=/var/irzean/templates"
+              "IRZEAN_STATIC_DIR=/var/irzean/static"
+            ];
+          };
+        };
       };
     });
 }

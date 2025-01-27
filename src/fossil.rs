@@ -1,8 +1,10 @@
 use std::{
+    collections::HashMap,
     env, fmt,
     path::PathBuf,
     str::FromStr,
     time::{Duration, SystemTime},
+    vec::Vec,
 };
 
 use async_walkdir::{Filtering, WalkDir};
@@ -16,6 +18,8 @@ use serde::{Deserialize, Serialize, de::Visitor};
 use tokio::fs;
 use tracing::{debug, info, warn};
 use yaml_rust2::YamlLoader;
+
+use crate::util;
 
 type Res<T> = color_eyre::Result<T>;
 
@@ -40,6 +44,8 @@ impl RepoHandler {
         let clone_path: PathBuf = env::var("IRZEAN_CLONE_PATH")?.into();
 
         let repo = if clone_path.exists() {
+            info!("`irzean-writings` opened from {clone_path:?}");
+
             Repository::open(&clone_path)?
         } else {
             let mut callbacks = RemoteCallbacks::new();
@@ -52,6 +58,8 @@ impl RepoHandler {
 
             let mut builder = RepoBuilder::new();
             builder.fetch_options(fo);
+
+            info!("`irzean-writings` cloned to {clone_path:?}");
 
             builder.clone(REPO_URL, &clone_path)?
         };
@@ -66,7 +74,6 @@ impl RepoHandler {
         let commit_time_utc =
             SystemTime::UNIX_EPOCH + Duration::from_secs(time.seconds().try_into()?);
 
-        info!("`irzean-writings` cloned to {clone_path:?}");
         info!("Latest commit ({shorthand}) is at {commit_time_utc:?}");
 
         Ok(Self {
@@ -114,9 +121,9 @@ impl RepoHandler {
                 warn!("Could not find ending hr in {relative:?}, skipping");
                 continue;
             };
+            let ending_hr = ending_hr + 3; // account for the offset
 
             let preamble = &content[3..ending_hr];
-            let remainder = &content[ending_hr + 3..];
 
             let docs = YamlLoader::load_from_str(preamble)?;
             let Some(doc) = docs.first() else {
@@ -134,15 +141,78 @@ impl RepoHandler {
             };
             let date_authored: DateTriple = date_authored.parse()?;
 
+            let tags = doc["tags"].as_vec().map_or_else(Vec::new, |tags| {
+                let mut out = Vec::new();
+
+                for tag in tags {
+                    let Some(tag) = tag.as_str() else {
+                        warn!(?tag, "Invalid tag, skipping");
+                        continue;
+                    };
+
+                    out.push(tag.to_string());
+                }
+
+                out
+            });
+
+            let is_nsfw = doc["nsfw"].as_bool().unwrap_or_default();
+            let is_hidden = doc["hidden"].as_bool().unwrap_or_default();
+
+            let description = doc["description"].as_str().map(ToString::to_string);
+
             list.push(Writing {
                 rel_path: relative.to_path_buf(),
                 title: title.to_string(),
                 date_authored,
-                content: remainder.to_string(),
+                content,
+                description,
+                tags,
+                is_nsfw,
+                is_hidden,
             });
+
+            // debug!(item = ?list.last(), "Pushed");
         }
 
+        list.sort_by_cached_key(|v| v.date_authored);
+
         Ok(list)
+    }
+
+    pub async fn get_writing(&self, relative_path: &str) -> Res<Writing> {
+        let file_list = self.file_list().await?;
+
+        file_list
+            .into_iter()
+            .find(|v| {
+                let rel_path = util::slugify_path(&v.rel_path);
+
+                rel_path.eq(relative_path)
+            })
+            .ok_or_eyre("Couldn't find a suitable Writing")
+    }
+
+    pub async fn tag_list(&self) -> Res<HashMap<String, u64>> {
+        let mut tags = HashMap::new();
+
+        let writings = self.file_list().await?;
+        for writing in &writings {
+            for tag in &writing.tags {
+                tags.entry(tag.clone()).and_modify(|v| *v += 1).or_insert(1);
+            }
+        }
+
+        tags.insert(
+            "nsfw".to_string(),
+            writings.iter().filter(|v| v.is_nsfw).count() as u64,
+        );
+        tags.insert(
+            "sfw".to_string(),
+            writings.iter().filter(|v| !v.is_nsfw).count() as u64,
+        );
+
+        Ok(tags)
     }
 
     pub fn update(&mut self) -> Res<()> {
@@ -203,10 +273,14 @@ pub struct Writing {
     pub rel_path: PathBuf,
     pub title: String,
     pub date_authored: DateTriple,
+    pub tags: Vec<String>,
+    pub description: Option<String>,
+    pub is_nsfw: bool,
+    pub is_hidden: bool,
     pub content: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DateTriple {
     pub year: u16,
     pub month: u8,
@@ -267,6 +341,13 @@ impl Visitor<'_> for DateTripleVisitor {
         write!(formatter, "a date triple in the format `yyyy-mm-dd`")
     }
 
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        self.visit_borrowed_str(v)
+    }
+
     fn visit_borrowed_str<E>(self, v: &'_ str) -> Result<Self::Value, E>
     where
         E: serde::de::Error,
@@ -288,5 +369,12 @@ impl Visitor<'_> for DateTripleVisitor {
             .map_err(|e| serde::de::Error::custom(format!("invalid int for day: {e}")))?;
 
         Ok(DateTriple { year, month, day })
+    }
+
+    fn visit_string<E>(self, v: String) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        self.visit_borrowed_str(&v)
     }
 }

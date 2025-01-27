@@ -18,6 +18,7 @@ git2 = { version = "0.20.0", features = [
 grass = "0.13.4"
 minijinja = { version = "2.6.0", features = ["loader", "speedups"] }
 serde = { version = "1.0.217", features = ["derive"] }
+slug = "0.1.6"
 tokio = { version = "1.43", features = ["full"] }
 tower = { version = "0.5", features = ["full"] }
 tower-http = { version = "0.6.2", features = ["full"] }

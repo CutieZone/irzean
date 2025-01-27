@@ -1,0 +1,23 @@
+{%- extends "html/layout.jinja" %}
+
+{%- block body %}
+
+<h1>{{writing.title}}</h1>
+{%- if writing.is_nsfw %}
+<h2 title="This text contains NSFW elements"><code class="nsfw">[NSFW]</code></h2>
+{%- endif %}
+{%- if writing.is_hidden %}
+<h2 title="This is a hidden writing.
+You should probably not link this to others without consent."><code>[HIDDEN]</code></h2>
+{%- endif %}
+<h2><code>{{writing.date_authored}}</code></h2>
+<ul class="flex row tags">
+  {%- for tag in writing.tags %}
+  <li><code>{{tag}}</code></li>
+  {%- endfor %}
+</ul>
+<hr />
+
+{%- set markdown = to_markdown(writing.content)|safe %}
+{{ markdown }}
+{%- endblock body %}

@@ -1,9 +1,17 @@
 @use "sass:color" as c;
 
+$bg: #221924;
+$bg-accent: #2c1e2f;
+$bg-highlight: #480855;
+
+$col: #dcb6e4;
+$col-highlight: #9433a7;
+$col-nsfw: #d60455;
+
 body,
 main {
-  background-color: #221924;
-  color: #dcb6e4;
+  background-color: $bg;
+  color: $col;
 }
 
 body {
@@ -20,7 +28,12 @@ header {
   justify-content: center;
   width: 100%;
 
-  border-bottom: 3px dashed #2c1e2f;
+  border-bottom: 3px dashed $bg-accent;
+
+  a {
+    padding-left: 1em;
+    padding-right: 1em;
+  }
 }
 
 main {
@@ -62,8 +75,12 @@ footer {
 code {
   border: 0px;
   border-radius: 1em;
-  background-color: #480855;
+  background-color: $bg-highlight;
   padding: 0.25em 1.1em;
+
+  &.nsfw {
+    color: $col-nsfw;
+  }
 }
 
 h1 {
@@ -104,7 +121,7 @@ p {
 
 hr {
   width: 80%;
-  border: 2px dashed #480855;
+  border: 2px dashed $bg-highlight;
   border-radius: 5px;
 }
 
@@ -112,7 +129,7 @@ details {
   summary {
     list-style: none;
 
-    text-decoration: wavy underline #9433a7 2px;
+    text-decoration: wavy underline 2px $col-highlight;
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -124,26 +141,77 @@ details {
   justify-content: center;
 
   &[open] {
-    border: 2px dashed #480855;
-    background-color: #480855;
+    border: 2px dashed $bg-accent;
+    background-color: $bg-accent;
     border-radius: 1em;
     padding: 0.25rem;
   }
 }
 
 a {
-  color: #dcb6e4;
-  text-decoration: wavy underline #9433a7 1px;
+  color: $col;
+  text-decoration: wavy underline $col-highlight 1px;
 
   transition: all ease-in-out 0.2s;
 
   &:hover {
-    color: c.darken(#dcb6e4, 10%);
+    color: c.darken($col, 10%);
 
-    text-decoration-color: c.lighten(#9433a7, 10%);
+    text-decoration-color: c.lighten($col-highlight, 10%);
   }
 
   &:visited {
-    color: #dcb6e4;
+    color: $col;
   }
+}
+
+ul {
+  &.col {
+    li {
+      padding: 0.1em 0;
+    }
+  }
+  &.row {
+    li {
+      padding: 0 0.1em;
+    }
+  }
+
+  list-style: none;
+  padding: 0;
+}
+
+ul.writings {
+  width: 100%;
+
+  li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+ul.tags {
+  padding: 0;
+}
+
+.flex {
+  display: flex;
+  justify-content: center;
+
+  &.col {
+    flex-direction: column;
+  }
+
+  &.row {
+    flex-direction: row;
+  }
+}
+
+.writing {
+  width: 100%;
+}
+
+.nsfw {
+  text-decoration-color: $col-nsfw;
 }

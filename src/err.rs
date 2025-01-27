@@ -14,6 +14,8 @@ pub enum Error {
     Sass(Box<grass::Error>),
     Axum(axum::Error),
     AxumHttp(axum::http::Error),
+
+    Internal(color_eyre::Report),
 }
 
 #[cfg(feature = "development")]
@@ -41,6 +43,10 @@ impl fmt::Display for Error {
                 warn!(?e, "Axum HTTP Error");
                 write!(f, "Axum HTTP Error: {e}")
             }
+            Self::Internal(e) => {
+                warn!(?e, "Internal Error");
+                write!(f, "Internal Error: {e}")
+            }
         }
     }
 }
@@ -63,6 +69,9 @@ impl fmt::Display for Error {
             }
             Self::AxumHttp(e) => {
                 warn!(?e, "Axum HTTP Error")
+            }
+            Self::Internal(e) => {
+                warn!(?e, "Internal Error")
             }
         }
 
@@ -114,5 +123,11 @@ impl From<axum::Error> for Error {
 impl From<axum::http::Error> for Error {
     fn from(value: axum::http::Error) -> Self {
         Self::AxumHttp(value)
+    }
+}
+
+impl From<color_eyre::Report> for Error {
+    fn from(value: color_eyre::Report) -> Self {
+        Self::Internal(value)
     }
 }

@@ -8,8 +8,8 @@ use color_eyre::eyre::{Context, OptionExt};
 use fossil::RepoHandler;
 use minijinja::{Environment, context};
 use tokio::{fs, net::TcpListener};
-use tower_http::trace::TraceLayer;
-use tracing::{error, info};
+use tower_http::{compression::CompressionLayer, trace::TraceLayer};
+use tracing::{debug, error, info};
 use tracing_subscriber::{EnvFilter, fmt};
 
 mod err;
@@ -62,18 +62,29 @@ async fn run() -> color_eyre::Result<()> {
         .parse::<SocketAddr>()
         .context("Couldn't parse `0.0.0.0:1337`")?;
 
-    let jinja_env = build_jinja_env().await?;
+    let mut jinja_env = build_jinja_env().await?;
+    let mut repo_handler = RepoHandler::init()?;
+    repo_handler.update()?;
+
+    insert_links(&mut jinja_env);
+
+    let app_state = AppState {
+        jinja_env,
+        repo_handler,
+    };
 
     let router = Router::new()
         .route("/", get(routes::index))
+        .route("/list", get(routes::list))
+        .route("/tags", get(routes::tags))
+        .route("/tag/{name}", get(routes::specific_tag))
         .route("/style/{path}", get(routes::style))
+        .route("/writing/{*path}", get(routes::writing))
         .fallback(routes::not_found)
         .method_not_allowed_fallback(routes::method_not_allowed)
-        .with_state(Arc::new(AppState {
-            jinja_env,
-            repo_handler: RepoHandler::init()?,
-        }))
-        .layer(TraceLayer::new_for_http());
+        .with_state(Arc::new(app_state))
+        .layer(TraceLayer::new_for_http())
+        .layer(CompressionLayer::new().gzip(true).br(true));
 
     let listener = TcpListener::bind(addr)
         .await
@@ -91,10 +102,45 @@ async fn run() -> color_eyre::Result<()> {
     Ok(())
 }
 
+fn insert_links(env: &mut Environment<'static>) {
+    let root_uri = root_url();
+    let mut links = vec![];
+
+    links.push(context! {
+        name => "Home",
+        uri => format!("{root_uri}/"),
+        target => "_self",
+    });
+    links.push(context! {
+        name => "Tags",
+        uri => format!("{root_uri}/tags"),
+        target => "_self",
+    });
+    links.push(context! {
+        name => "List",
+        uri => format!("{root_uri}/list"),
+        target => "_self",
+    });
+    links.push(context! {
+        name => "Leave",
+        uri => "https://cutie.zone",
+        target => "_self",
+    });
+
+    env.add_global("links", links);
+}
+
 async fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
     let mut jinja_env = Environment::new();
 
-    let mut read_dir = fs::read_dir("./templates/html")
+    let template_dir =
+        env::var("IRZEAN_TEMPLATE_DIR").unwrap_or_else(|_| "./templates".to_string());
+
+    debug!(?template_dir, "Using");
+
+    let template_dir = template_dir + "/html";
+
+    let mut read_dir = fs::read_dir(template_dir)
         .await
         .context("Couldn't read template path.")?;
 
@@ -116,6 +162,8 @@ async fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
                 continue;
             }
 
+            debug!(?path, "Adding template {file_name} as `html/{file_name}`");
+
             jinja_env.add_template_owned(
                 format!("html/{file_name}"),
                 fs::read_to_string(&path).await?,
@@ -123,12 +171,13 @@ async fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
         }
     }
 
-    let links = vec![context! {
-        uri => "https://potato.com",
-        name => "Potato"
-    }];
-
-    jinja_env.add_global("links", links);
+    jinja_env.add_function("tag_url_for", util::tag_url_for);
+    jinja_env.add_function("writing_url_for", util::writing_url_for);
+    jinja_env.add_function("to_markdown", util::to_markdown);
 
     Ok(jinja_env)
+}
+
+pub(crate) fn root_url() -> String {
+    env::var("IRZEAN_ROOT_URL").unwrap_or_else(|_| "http://0.0.0.0:1337".to_string())
 }

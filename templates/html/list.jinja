@@ -1,0 +1,64 @@
+{%- extends "html/layout.jinja" %}
+
+{%- block body %}
+{%- if tag_name is defined and tag_name %}
+<h1>All writings for the tag <code>{{tag_name}}</code></h1>
+{%- else %}
+<h1>All writings</h1>
+{%- endif%}
+
+{%- if writings | length > 0 %}
+<ul class="flex col writings">
+  {%- for writing in writings | rejectattr('is_hidden') %}
+  <li>
+    {%- if writing.is_nsfw %}
+    <a href="{{ writing_url_for(writing) }}" target="_self" referrerpolicy="noreferrer" class="nsfw">
+      <h2>{{writing.title}}</h2>
+    </a>
+    <h3><code class="nsfw">[NSFW]</code></h3>
+    <code>{{writing.date_authored}}</code>
+
+    {%- if writing.description is defined and writing.description %}
+    <details>
+      <summary>Description/Summary</summary>
+      <p>{{writing.description}}</p>
+    </details>
+    {%- endif%}
+
+    <ul class="flex row tags">
+      {%- for tag in writing.tags %}
+      <li class="tag">
+        <a href="{{ tag_url_for(tag) }}" target="_self" referrerpolicy="noreferrer">{{tag}}</a>
+      </li>
+      {%- endfor %}
+    </ul>
+
+    {%- else %}
+    <a href="{{ writing_url_for(writing) }}" target="_self" referrerpolicy="noreferrer">
+      <h2>{{writing.title}}</h2>
+    </a>
+    <code>{{writing.date_authored}}</code>
+
+    {%- if writing.description is defined and writing.description %}
+    <details>
+      <summary>Description/Summary</summary>
+      <p>{{writing.description}}</p>
+    </details>
+    {%- endif%}
+
+    <ul class="flex row tags">
+      {%- for tag in writing.tags %}
+      <li class="tag">
+        <a href="{{ tag_url_for(tag) }}" target="_self" referrerpolicy="noreferrer">{{tag}}</a>
+      </li>
+      {%- endfor %}
+    </ul>
+    {%- endif %}
+    <hr />
+  </li>
+  {%- endfor %}
+</ul>
+{%- else%}
+<h2>There are none :/</h2>
+{%- endif %}
+{%- endblock body %}

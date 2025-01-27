@@ -1144,6 +1144,7 @@ dependencies = [
  "grass",
  "minijinja",
  "serde",
+ "slug",
  "tokio",
  "tower",
  "tower-http",
