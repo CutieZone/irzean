@@ -1,15 +1,15 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use std::{env, net::SocketAddr, sync::Arc};
+use std::{env, net::SocketAddr, sync::Arc, time::Duration};
 
 use axum::{Router, routing::get};
 use color_eyre::eyre::{Context, OptionExt};
 use fossil::RepoHandler;
 use minijinja::{Environment, context};
-use tokio::{fs, net::TcpListener};
+use tokio::{fs, net::TcpListener, sync::RwLock, time};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 use tracing_subscriber::{EnvFilter, fmt};
 
 mod err;
@@ -54,7 +54,23 @@ async fn main() {
 #[derive(Clone)]
 pub struct AppState {
     pub jinja_env: Environment<'static>,
-    pub repo_handler: RepoHandler,
+    pub repo_handler: Arc<RwLock<RepoHandler>>,
+}
+
+async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
+    let mut interval = time::interval(Duration::from_secs(60));
+
+    loop {
+        interval.tick().await;
+
+        let value = repo_handler.write().await.update();
+        match value {
+            Ok(()) => {}
+            Err(e) => {
+                warn!(?e, "Failed during repo_handler update");
+            }
+        }
+    }
 }
 
 async fn run() -> color_eyre::Result<()> {
@@ -65,6 +81,10 @@ async fn run() -> color_eyre::Result<()> {
     let mut jinja_env = build_jinja_env().await?;
     let mut repo_handler = RepoHandler::init()?;
     repo_handler.update()?;
+
+    let repo_handler = Arc::new(RwLock::new(repo_handler));
+
+    tokio::spawn(background_task(repo_handler.clone()));
 
     insert_links(&mut jinja_env);
 

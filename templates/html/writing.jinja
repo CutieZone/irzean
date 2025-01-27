@@ -19,5 +19,7 @@ You should probably not link this to others without consent."><code>[HIDDEN]</co
 <hr />
 
 {%- set markdown = to_markdown(writing.content)|safe %}
+<div class="md flex col">
 {{ markdown }}
+</div>
 {%- endblock body %}

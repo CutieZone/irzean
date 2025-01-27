@@ -32,7 +32,7 @@ pub async fn writing(
     UriPath(path): UriPath<String>,
     s: State<Arc<AppState>>,
 ) -> Result<Response, Error> {
-    let writing = s.repo_handler.get_writing(&path).await;
+    let writing = s.repo_handler.read().await.get_writing(&path).await;
 
     let writing = match writing {
         Ok(writing) => writing,
@@ -55,7 +55,9 @@ pub async fn writing(
 pub async fn tags(State(s): State<Arc<AppState>>) -> Result<Html<String>, Error> {
     let tmpl = s.jinja_env.get_template("html/tags.jinja")?;
 
-    let rendered = tmpl.render(templates::Tags::new(s.repo_handler.tag_list().await?))?;
+    let rendered = tmpl.render(templates::Tags::new(
+        s.repo_handler.read().await.tag_list().await?,
+    ))?;
 
     Ok(Html(rendered))
 }
@@ -69,6 +71,8 @@ pub async fn specific_tag(
 
     let _ = s
         .repo_handler
+        .read()
+        .await
         .tag_list()
         .await?
         .get(&name)
@@ -76,6 +80,8 @@ pub async fn specific_tag(
 
     let writings_with_tag = s
         .repo_handler
+        .read()
+        .await
         .file_list()
         .await?
         .into_iter()
@@ -99,7 +105,7 @@ pub async fn specific_tag(
 pub async fn list(s: State<Arc<AppState>>) -> Result<Html<String>, Error> {
     let tmpl = s.jinja_env.get_template("html/list.jinja")?;
 
-    let writings = s.repo_handler.file_list().await?;
+    let writings = s.repo_handler.read().await.file_list().await?;
 
     let rendered = tmpl.render(templates::List::new(writings))?;
 
