@@ -93,6 +93,7 @@ async fn run() -> color_eyre::Result<()> {
     let css_hash = util::hash_scss();
 
     jinja_env.add_global("css_hash", &css_hash);
+    jinja_env.add_global("parental_mode", parental_mode());
 
     let app_state = AppState {
         jinja_env,
@@ -151,11 +152,19 @@ fn insert_links(env: &mut Environment<'static>) {
         uri => format!("{root_uri}/list"),
         target => "_self",
     });
-    links.push(context! {
-        name => "Leave",
-        uri => "https://cutie.zone",
-        target => "_self",
-    });
+
+    if !parental_mode() {
+        links.push(context! {
+            name => "Contact",
+            uri => "https://cutie.zone/social",
+            target => "_blank",
+        });
+        links.push(context! {
+            name => "Leave",
+            uri => "https://cutie.zone",
+            target => "_self",
+        });
+    }
 
     env.add_global("links", links);
 }
@@ -195,4 +204,8 @@ fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
 
 pub(crate) fn root_url() -> String {
     env::var("IRZEAN_ROOT_URL").unwrap_or_else(|_| "http://0.0.0.0:1337".to_string())
+}
+
+pub(crate) fn parental_mode() -> bool {
+    env::var("IRZEAN_PARENTAL_MODE").is_ok()
 }

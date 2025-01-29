@@ -31,10 +31,13 @@ header {
   width: 100%;
 
   border-bottom: 3px dashed $bg-accent;
+  padding-top: 0.15em;
+  padding-bottom: 0.15em;
 
   a {
-    padding-left: 1em;
-    padding-right: 1em;
+    padding: 0.25em;
+    margin-left: 1em;
+    margin-right: 1em;
   }
 }
 

@@ -19,7 +19,7 @@ use tokio::fs;
 use tracing::{debug, info, warn};
 use yaml_rust2::YamlLoader;
 
-use crate::util;
+use crate::{parental_mode, util};
 
 type Res<T> = color_eyre::Result<T>;
 
@@ -166,6 +166,10 @@ impl RepoHandler {
             let previous = doc["previous"].as_str().map(ToString::to_string);
             let next = doc["next"].as_str().map(ToString::to_string);
 
+            if parental_mode() && is_nsfw {
+                continue; // skip any and all nsfw content early in the process
+            }
+
             list.push(Writing {
                 rel_path: relative.to_path_buf(),
                 title: title.to_string(),
@@ -209,13 +213,15 @@ impl RepoHandler {
             }
         }
 
-        tags.insert(
-            "nsfw".to_string(),
-            writings
-                .iter()
-                .filter(|v| v.is_nsfw && !v.is_hidden)
-                .count() as u64,
-        );
+        if !parental_mode() {
+            tags.insert(
+                "nsfw".to_string(),
+                writings
+                    .iter()
+                    .filter(|v| v.is_nsfw && !v.is_hidden)
+                    .count() as u64,
+            );
+        }
         tags.insert(
             "sfw".to_string(),
             writings
