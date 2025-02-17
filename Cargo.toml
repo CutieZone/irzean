@@ -6,28 +6,27 @@ edition = "2024"
 resolver = "3"
 
 [dependencies]
-async-walkdir = "2.0.0"
+async-walkdir = "2.0"
 axum = { version = "0.8", features = ["macros", "multipart"] }
-blake3 = "1.5.5"
-color-eyre = "0.6.3"
+blake3 = "1.5"
+color-eyre = "0.6"
 comrak = "0.35"
-futures-lite = "2.6.0"
-git2 = { version = "0.20.0", features = [
+futures-lite = "2.6"
+git2 = { version = "0.20", features = [
   "vendored-libgit2",
   "vendored-openssl",
 ] }
-grass = "0.13.4"
-lol_html = "2.2.0"
-minijinja = { version = "2.6.0", features = ["loader", "speedups"] }
-rust-embed = { version = "8.5.0", features = ["axum", "compression"] }
-serde = { version = "1.0.217", features = ["derive"] }
-slug = "0.1.6"
+grass = "0.13"
+minijinja = { version = "2.6", features = ["loader", "speedups"] }
+rust-embed = { version = "8.5", features = ["axum", "compression"] }
+serde = { version = "1.0", features = ["derive"] }
+slug = "0.1"
 tokio = { version = "1.43", features = ["full"] }
 tower = { version = "0.5", features = ["full"] }
-tower-http = { version = "0.6.2", features = ["full"] }
+tower-http = { version = "0.6", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-yaml-rust2 = "0.9.0"
+yaml-rust2 = "0.10"
 
 [features]
 default = ["development"]

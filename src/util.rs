@@ -2,7 +2,6 @@ use std::path::{Component, Path};
 
 use blake3::Hasher;
 use comrak::{Arena, Options, Plugins};
-use lol_html::{HtmlRewriter, Settings, text};
 use minijinja::{Error, ErrorKind, value::ViaDeserialize};
 use slug::slugify;
 use tracing::{debug, warn};
@@ -67,8 +66,25 @@ pub fn writing_url_from(slugified: &str) -> Result<String, Error> {
     Ok(format!("{}/writing/{}", root_url(), slugified))
 }
 
+fn preprocess(input: &str) -> String {
+    input
+        .lines()
+        .map(|line| {
+            if line.starts_with('>') {
+                format!("{line}\n>")
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 #[allow(clippy::unnecessary_wraps)]
 pub fn to_markdown(input: &str) -> Result<String, Error> {
+    let input = preprocess(input);
+    let input = input.as_str();
+
     let arena = Arena::new();
     let mut options = Options::default();
 
@@ -97,34 +113,6 @@ pub fn to_markdown(input: &str) -> Result<String, Error> {
             format!("Unable to htmlify the markdown. {e}"),
         )
     })?;
-
-    let maybe = String::from_utf8(output)
-        .map_err(|e| Error::new(ErrorKind::SyntaxError, format!("Invalid UTF8. {e}")))?;
-
-    output = Vec::new();
-
-    let mut rewriter = HtmlRewriter::new(
-        Settings {
-            element_content_handlers: vec![text!("blockquote p", |el| {
-                let text = el.as_str();
-
-                if el.as_str().contains("<br>") {
-                    el.set_str(text.replace("<br>", "<\\p><p>"));
-                }
-
-                Ok(())
-            })],
-            ..Settings::new()
-        },
-        |c: &[u8]| output.extend_from_slice(c),
-    );
-
-    rewriter
-        .write(maybe.as_bytes())
-        .map_err(|e| Error::new(ErrorKind::SyntaxError, format!("Failed to write. {e}")))?;
-    rewriter
-        .end()
-        .map_err(|e| Error::new(ErrorKind::SyntaxError, format!("Failed to end. {e}")))?;
 
     String::from_utf8(output)
         .map_err(|e| Error::new(ErrorKind::SyntaxError, format!("Invalid UTF8. {e}")))

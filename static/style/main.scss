@@ -173,6 +173,7 @@ ul {
       padding: 0.1em 0;
     }
   }
+
   &.row {
     li {
       padding: 0 0.1em;
@@ -241,6 +242,7 @@ pre {
 
 blockquote {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   justify-items: center;
 
