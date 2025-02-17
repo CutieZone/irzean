@@ -73,6 +73,16 @@ pub fn to_markdown(input: &str) -> Result<String, Error> {
 
     options.extension.strikethrough = true;
     options.extension.front_matter_delimiter = Some("---".to_string());
+    options.extension.table = true;
+    options.extension.superscript = true;
+    options.extension.underline = true;
+    options.extension.subscript = true;
+
+    options.parse.smart = true;
+
+    options.render.hardbreaks = true;
+    options.render.prefer_fenced = true;
+    options.render.figure_with_caption = true;
 
     let plugins = Plugins::builder().build();
 
