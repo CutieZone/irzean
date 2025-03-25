@@ -2,5 +2,5 @@
 linker = "clang"
 rustflags = [
   "-C",
-  "link-arg=-fuse-ld=/nix/store/giy7lni6d8cv81qrsgp13rsgv25188ps-mold-2.36.0/bin/mold",
+  "link-arg=-fuse-ld=/nix/store/sczaryb644w1m6pqw6m2sb26lp684b19-mold-2.37.1/bin/mold",
 ]
