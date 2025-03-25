@@ -245,11 +245,13 @@ blockquote {
   flex-direction: column;
   justify-content: center;
   justify-items: center;
+  text-align: start;
 
   border: 0px;
   border-radius: 1em;
   background-color: $bg-accent;
-  padding: 0.75em 0.4em;
+  padding: 0.75em 25%;
+  text-align: start;
 
   p::before {
     content: "> ";
