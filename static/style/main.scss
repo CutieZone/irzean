@@ -8,6 +8,11 @@ $col: #dcb6e4;
 $col-highlight: #9433a7;
 $col-nsfw: #d60455;
 
+:root {
+  /* Sorry, light mode users. I don't. */
+  color-scheme: dark;
+}
+
 body,
 main {
   background-color: $bg;
