@@ -76,7 +76,7 @@ async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
 }
 
 async fn run() -> color_eyre::Result<()> {
-    let addr = "0.0.0.0:1337"
+    let addr = "0.0.0.0:1339"
         .parse::<SocketAddr>()
         .context("Couldn't parse `0.0.0.0:1337`")?;
 
@@ -104,14 +104,6 @@ async fn run() -> color_eyre::Result<()> {
     };
 
     let router = Router::new()
-        .layer(TraceLayer::new_for_http())
-        .layer(
-            CompressionLayer::new()
-                .gzip(true)
-                .br(true)
-                .deflate(true)
-                .zstd(true),
-        )
         .route("/", get(routes::index))
         .route("/list", get(routes::list))
         .route("/tags", get(routes::tags))
@@ -120,7 +112,15 @@ async fn run() -> color_eyre::Result<()> {
         .route("/writing/{*path}", get(routes::writing))
         .fallback(routes::not_found)
         .method_not_allowed_fallback(routes::method_not_allowed)
-        .with_state(Arc::new(app_state));
+        .with_state(Arc::new(app_state))
+        .layer(TraceLayer::new_for_http())
+        .layer(
+            CompressionLayer::new()
+                .gzip(true)
+                .br(true)
+                .deflate(true)
+                .zstd(true),
+        );
 
     let listener = TcpListener::bind(addr)
         .await
