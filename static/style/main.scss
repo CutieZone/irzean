@@ -9,280 +9,291 @@ $col-highlight: #9433a7;
 $col-nsfw: #d60455;
 
 :root {
-  /* Sorry, light mode users. I don't. */
-  color-scheme: dark;
+    /* Sorry, light mode users. I don't. */
+    color-scheme: dark;
 }
 
 body,
 main {
-  background-color: $bg;
-  color: $col;
+    background-color: $bg;
+    color: $col;
 }
 
 body {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  text-align: center;
-  margin: 0;
-  min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    text-align: center;
+    margin: 0;
+    min-height: 100vh;
 }
 
 header {
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  width: 100%;
-
-  border-bottom: 3px dashed $bg-accent;
-  padding-top: 0.15em;
-  padding-bottom: 0.15em;
-
-  a {
-    padding: 0.25em;
-    margin-left: 1em;
-    margin-right: 1em;
-  }
-}
-
-main {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-
-  flex: 1;
-
-  overflow: auto;
-  overflow-wrap: normal;
-  min-width: auto;
-  width: auto;
-  padding: 0 0.75em;
-
-  @media screen and (min-width: 600px) {
-    & {
-      width: 80%;
-      min-width: 400px;
-      max-width: 750px;
-    }
-  }
-}
-
-footer {
-  margin-top: auto;
-
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  width: 100%;
-
-  border-top: 3px dashed #2c1e2f;
-}
-
-code {
-  border: 0px;
-  border-radius: 1em;
-  background-color: $bg-highlight;
-  padding: 0.25em 1.1em;
-
-  &.nsfw {
-    color: $col-nsfw;
-  }
-}
-
-h1 {
-  margin-block-start: 0.25em;
-  margin-block-end: 0.25em;
-}
-
-h2 {
-  margin-block-start: 0.35em;
-  margin-block-end: 0.35em;
-}
-
-h3 {
-  margin-block-start: 0.45em;
-  margin-block-end: 0.45em;
-}
-
-p {
-  margin-block-start: 0.25em;
-  margin-block-end: 0.25em;
-}
-
-.tiny {
-  font-size: 0.25rem;
-  height: 0.75rem;
-
-  transition: all ease-in-out 0.25s;
-
-  margin-block-start: 0;
-  margin-block-end: 0.25rem;
-
-  &:hover {
-    font-size: 0.75rem;
-    height: 0.75rem;
-    cursor: none;
-  }
-}
-
-hr {
-  width: 80%;
-  border: 2px dashed $bg-highlight;
-  border-radius: 5px;
-}
-
-details {
-  summary {
-    list-style: none;
-
-    text-decoration: wavy underline 2px $col-highlight;
     display: flex;
     flex-direction: row;
     justify-content: center;
-  }
+    width: 100%;
 
-  width: 60%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+    border-bottom: 3px dashed $bg-accent;
+    padding-top: 0.15em;
+    padding-bottom: 0.15em;
 
-  &[open] {
-    border: 2px dashed $bg-accent;
-    background-color: $bg-accent;
+    a {
+        padding: 0.25em;
+        margin-left: 1em;
+        margin-right: 1em;
+    }
+}
+
+main {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+
+    flex: 1;
+
+    overflow: auto;
+    overflow-wrap: normal;
+    min-width: auto;
+    width: auto;
+    padding: 0 0.75em;
+
+    @media screen and (min-width: 600px) {
+        & {
+            width: 80%;
+            min-width: 400px;
+            max-width: 750px;
+        }
+    }
+}
+
+footer {
+    margin-top: auto;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    width: 100%;
+
+    border-top: 3px dashed #2c1e2f;
+}
+
+code {
+    border: 0px;
     border-radius: 1em;
-    padding: 0.25rem;
-  }
+    background-color: $bg-highlight;
+    padding: 0.25em 1.1em;
+
+    &.nsfw {
+        color: $col-nsfw;
+    }
+}
+
+h1 {
+    margin-block-start: 0.25em;
+    margin-block-end: 0.25em;
+}
+
+h2 {
+    margin-block-start: 0.35em;
+    margin-block-end: 0.35em;
+}
+
+h3 {
+    margin-block-start: 0.45em;
+    margin-block-end: 0.45em;
+}
+
+p {
+    margin-block-start: 0.25em;
+    margin-block-end: 0.25em;
+}
+
+.tiny {
+    font-size: 0.25rem;
+    height: 0.75rem;
+
+    transition: all ease-in-out 0.25s;
+
+    margin-block-start: 0;
+    margin-block-end: 0.25rem;
+
+    &:hover {
+        font-size: 0.75rem;
+        height: 0.75rem;
+        cursor: none;
+    }
+}
+
+hr {
+    width: 80%;
+    border: 2px dashed $bg-highlight;
+    border-radius: 5px;
+}
+
+details {
+    summary {
+        list-style: none;
+
+        text-decoration: wavy underline 2px $col-highlight;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    &[open] {
+        border: 2px dashed $bg-accent;
+        background-color: $bg-accent;
+        border-radius: 1em;
+        padding: 0.25rem;
+    }
 }
 
 a {
-  color: $col;
-  text-decoration: wavy underline $col-highlight 1px;
-
-  transition: all ease-in-out 0.2s;
-
-  &:hover {
-    color: c.darken($col, 10%);
-
-    text-decoration-color: c.lighten($col-highlight, 10%);
-  }
-
-  &:visited {
     color: $col;
-  }
+    text-decoration: wavy underline $col-highlight 1px;
+
+    transition: all ease-in-out 0.2s;
+
+    &:hover {
+        color: c.darken($col, 10%);
+
+        text-decoration-color: c.lighten($col-highlight, 10%);
+    }
+
+    &:visited {
+        color: $col;
+    }
 }
 
 ul {
-  &.col {
-    li {
-      padding: 0.1em 0;
+    &.col {
+        li {
+            padding: 0.1em 0;
+        }
     }
-  }
 
-  &.row {
-    li {
-      padding: 0 0.1em;
+    &.row {
+        li {
+            padding: 0 0.1em;
+        }
     }
-  }
 
-  list-style: none;
-  padding: 0;
+    list-style: none;
+    padding: 0;
 }
 
 ul.writings {
-  width: 100%;
+    width: 100%;
 
-  li {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+    li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
 }
 
 ul.tags {
-  padding: 0;
+    padding: 0;
 }
 
 .flex {
-  display: flex;
-  justify-content: center;
-  text-align: center;
+    display: flex;
+    justify-content: center;
+    text-align: center;
 
-  &.col {
-    flex-direction: column;
-  }
+    &.col {
+        flex-direction: column;
+    }
 
-  &.row {
-    flex-direction: row;
-  }
+    &.row {
+        flex-direction: row;
+    }
 }
 
 .writing {
-  width: 100%;
+    width: 100%;
 }
 
 .nsfw {
-  text-decoration-color: $col-nsfw;
+    text-decoration-color: $col-nsfw;
 }
 
 pre {
-  display: flex;
-  justify-content: center;
-  justify-items: center;
+    display: flex;
+    justify-content: center;
+    justify-items: center;
 
-  border: 0px;
-  border-radius: 1em;
-  background-color: $bg-highlight;
-  padding: 0.75em 0.4em;
+    border: 0px;
+    border-radius: 1em;
+    background-color: $bg-highlight;
+    padding: 0.75em 0.4em;
 
-  code {
-    // text-align: left;
-    border-radius: 0;
-    border: 0;
-    padding: 0;
-    background-color: transparent;
-    width: 80%;
-  }
+    code {
+        // text-align: left;
+        border-radius: 0;
+        border: 0;
+        padding: 0;
+        background-color: transparent;
+        width: 80%;
+    }
 }
 
 blockquote {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  justify-items: center;
-  text-align: start;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    justify-items: center;
+    text-align: start;
 
-  border: 0px;
-  border-radius: 1em;
-  background-color: $bg-accent;
-  padding: 0.75em 12.5%;
-  text-align: start;
+    border: 0px;
+    border-radius: 1em;
+    background-color: $bg-accent;
+    padding: 0.75em 12.5%;
+    text-align: start;
 
-  p::before {
-    content: "> ";
-    color: c.transparentize($color: $col, $amount: 0.3);
-  }
+    p::before {
+        content: "> ";
+        color: c.transparentize($color: $col, $amount: 0.3);
+    }
 }
 
 div.series-selector {
-  justify-content: space-between;
-  width: 40%;
+    justify-content: space-between;
+    width: 40%;
 
-  a.previous::before {
-    content: "<- ";
-  }
+    a.previous::before {
+        content: "<- ";
+    }
 
-  a.previous[disabled] {
-    color: c.darken($col, 20%);
-    text-decoration: 1px solid black line-through;
-  }
+    a.previous[disabled] {
+        color: c.darken($col, 20%);
+        text-decoration: 1px solid black line-through;
+    }
 
-  a.next::after {
-    content: " ->";
-  }
+    a.next::after {
+        content: " ->";
+    }
 
-  a.next[disabled] {
-    color: c.darken($col, 20%);
-    text-decoration: 1px solid black line-through;
-  }
+    a.next[disabled] {
+        color: c.darken($col, 20%);
+        text-decoration: 1px solid black line-through;
+    }
+}
+
+.error {
+    font-family: monospace;
+    font-weight: bold;
+
+    text-decoration: wavy underline #970a4c;
+}
+
+.reason {
+    font-weight: bold;
 }

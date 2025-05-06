@@ -18,6 +18,8 @@ pub enum Error {
     Internal(color_eyre::Report),
 }
 
+impl std::error::Error for Error {}
+
 #[cfg(feature = "development")]
 impl fmt::Display for Error {
     #[allow(clippy::cognitive_complexity)]

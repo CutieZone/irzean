@@ -1,6 +1,7 @@
 use std::path::{Component, Path};
 
 use blake3::Hasher;
+use color_eyre::{Report, eyre::OptionExt};
 use comrak::{Arena, Options, Plugins};
 use minijinja::{Error, ErrorKind, value::ViaDeserialize};
 use slug::slugify;
@@ -135,4 +136,10 @@ pub fn hash_scss() -> String {
     hasher.finalize().to_hex().to_string()
 }
 
-pub fn prerender_scss() -> String {}
+pub fn prerender_css() -> Result<String, crate::err::Error> {
+    let main_scss = Statics::get("style/main.scss").ok_or_eyre("this should never fail.")?;
+    let string = String::from_utf8(main_scss.data.to_vec()).map_err(Report::from)?;
+    let rendered = grass::from_string(string, &grass::Options::default())?;
+
+    Ok(rendered)
+}

@@ -8,7 +8,6 @@ use color_eyre::eyre::{Context, OptionExt};
 use fossil::RepoHandler;
 use minijinja::{Environment, context};
 use tokio::{net::TcpListener, sync::RwLock, time};
-use tower::{Layer, ServiceBuilder};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
 use tracing_subscriber::{EnvFilter, fmt};
@@ -94,7 +93,8 @@ async fn run() -> color_eyre::Result<()> {
     let css_hash = util::hash_scss();
 
     jinja_env.add_global("css_hash", &css_hash);
-    jinja_env.add_global("css", util::prerender_css());
+    let prerendered = util::prerender_css()?;
+    jinja_env.add_global("prerendered_css", &prerendered);
     jinja_env.add_global("parental_mode", parental_mode());
 
     let app_state = AppState {

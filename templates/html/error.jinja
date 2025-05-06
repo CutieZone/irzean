@@ -1,9 +1,5 @@
 {% extends "html/layout.jinja" %}
 
-{%- block head %}
-<link rel="stylesheet" type="text/css" href="/style/error.css?v={{css_hash}}" />
-{% endblock head %}
-
 {%- block body %}
 <h1>{%- if error is defined and error %}{{error}}{%-else%}An error has occurred{%endif%}</h1>
 <h2><code class="error">{{code}}</code></h2>
