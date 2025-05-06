@@ -76,7 +76,7 @@ async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
 }
 
 async fn run() -> color_eyre::Result<()> {
-    let addr = "0.0.0.0:1339"
+    let addr = "0.0.0.0:1337"
         .parse::<SocketAddr>()
         .context("Couldn't parse `0.0.0.0:1337`")?;
 
