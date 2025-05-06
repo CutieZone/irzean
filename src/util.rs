@@ -134,3 +134,5 @@ pub fn hash_scss() -> String {
 
     hasher.finalize().to_hex().to_string()
 }
+
+pub fn prerender_scss() -> String {}

@@ -8,6 +8,7 @@ use color_eyre::eyre::{Context, OptionExt};
 use fossil::RepoHandler;
 use minijinja::{Environment, context};
 use tokio::{net::TcpListener, sync::RwLock, time};
+use tower::{Layer, ServiceBuilder};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
 use tracing_subscriber::{EnvFilter, fmt};
@@ -93,6 +94,7 @@ async fn run() -> color_eyre::Result<()> {
     let css_hash = util::hash_scss();
 
     jinja_env.add_global("css_hash", &css_hash);
+    jinja_env.add_global("css", util::prerender_css());
     jinja_env.add_global("parental_mode", parental_mode());
 
     let app_state = AppState {
@@ -102,6 +104,14 @@ async fn run() -> color_eyre::Result<()> {
     };
 
     let router = Router::new()
+        .layer(TraceLayer::new_for_http())
+        .layer(
+            CompressionLayer::new()
+                .gzip(true)
+                .br(true)
+                .deflate(true)
+                .zstd(true),
+        )
         .route("/", get(routes::index))
         .route("/list", get(routes::list))
         .route("/tags", get(routes::tags))
@@ -110,9 +120,7 @@ async fn run() -> color_eyre::Result<()> {
         .route("/writing/{*path}", get(routes::writing))
         .fallback(routes::not_found)
         .method_not_allowed_fallback(routes::method_not_allowed)
-        .with_state(Arc::new(app_state))
-        .layer(TraceLayer::new_for_http())
-        .layer(CompressionLayer::new().gzip(true).br(true));
+        .with_state(Arc::new(app_state));
 
     let listener = TcpListener::bind(addr)
         .await
@@ -125,7 +133,7 @@ async fn run() -> color_eyre::Result<()> {
             error!(?e, "Failed during axum serving");
             return Err(e.into());
         }
-    };
+    }
 
     Ok(())
 }
