@@ -88,6 +88,9 @@
           clang
           pkg-config
         ];
+
+        IRZEAN_PORT = "1339";
+        IRZEAN_CLONE_PATH = "/tmp/irzean-writings";
       };
 
       packages = {

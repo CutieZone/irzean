@@ -19,7 +19,8 @@ use crate::{
 mod templates;
 
 #[axum::debug_handler]
-pub async fn index(State(s): State<Arc<AppState>>) -> Result<Html<String>, Error> {
+#[tracing::instrument(skip(s))]
+pub async fn index(s: State<Arc<AppState>>) -> Result<Html<String>, Error> {
     let tmpl = s.jinja_env.get_template("html/index.jinja")?;
 
     let rendered = tmpl.render(Option::<()>::None)?;
@@ -28,6 +29,7 @@ pub async fn index(State(s): State<Arc<AppState>>) -> Result<Html<String>, Error
 }
 
 #[axum::debug_handler]
+#[tracing::instrument(skip(s))]
 pub async fn writing(
     uri: Uri,
     UriPath(path): UriPath<String>,
@@ -53,7 +55,8 @@ pub async fn writing(
 }
 
 #[axum::debug_handler]
-pub async fn tags(State(s): State<Arc<AppState>>) -> Result<Html<String>, Error> {
+#[tracing::instrument(skip(s))]
+pub async fn tags(s: State<Arc<AppState>>) -> Result<Html<String>, Error> {
     let tmpl = s.jinja_env.get_template("html/tags.jinja")?;
 
     let rendered = tmpl.render(templates::Tags::new(
@@ -64,6 +67,7 @@ pub async fn tags(State(s): State<Arc<AppState>>) -> Result<Html<String>, Error>
 }
 
 #[axum::debug_handler]
+#[tracing::instrument(skip(s))]
 pub async fn specific_tag(
     UriPath(name): UriPath<String>,
     s: State<Arc<AppState>>,
@@ -103,6 +107,7 @@ pub async fn specific_tag(
 }
 
 #[axum::debug_handler]
+#[tracing::instrument(skip(s))]
 pub async fn list(s: State<Arc<AppState>>) -> Result<Html<String>, Error> {
     let tmpl = s.jinja_env.get_template("html/list.jinja")?;
 
@@ -114,9 +119,10 @@ pub async fn list(s: State<Arc<AppState>>) -> Result<Html<String>, Error> {
 }
 
 #[axum::debug_handler]
+#[tracing::instrument(skip(s))]
 pub async fn not_found(
     uri: Uri,
-    State(s): State<Arc<AppState>>,
+    s: State<Arc<AppState>>,
 ) -> Result<(StatusCode, Html<String>), Error> {
     let tmpl = s.jinja_env.get_template("html/error.jinja")?;
 
@@ -126,10 +132,11 @@ pub async fn not_found(
 }
 
 #[axum::debug_handler]
+#[tracing::instrument(skip(s))]
 pub async fn method_not_allowed(
     method: Method,
     uri: Uri,
-    State(s): State<Arc<AppState>>,
+    s: State<Arc<AppState>>,
 ) -> Result<(StatusCode, Html<String>), Error> {
     let tmpl = s.jinja_env.get_template("html/error.jinja")?;
 
@@ -144,6 +151,7 @@ pub struct CacheBust {
 }
 
 #[axum::debug_handler]
+#[tracing::instrument(skip(s))]
 pub async fn style(
     UriPath(name): UriPath<String>,
     Query(v): Query<CacheBust>,
@@ -154,7 +162,7 @@ pub async fn style(
         return Ok(Redirect::permanent(&format!("/style/{name}?v={}", s.css_hash)).into_response());
     }
 
-    let base_path = format!("style/{name}").replace(".css", ".scss");
+    let base_path = name.replace(".css", ".scss");
 
     if let Some(data) = Statics::get(&base_path) {
         let string = String::from_utf8(data.data.to_vec()).map_err(Report::from)?;

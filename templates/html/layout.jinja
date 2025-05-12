@@ -40,10 +40,14 @@
 
   {%- if url is defined and url %}
   <meta property="og:url" content="{{url}}" />
-  {%- endif%}
+  {%- endif %}
 
+
+  {%- if environment is defined and environment != "DEV" %}
   <!-- Sorry for tracking you ;;;;; -->
   <script defer src="https://umami.cutie.zone/script.js" data-website-id="56951e2c-6ef5-4ca1-bfd8-0d8b5a0d0dfc"></script>
+  {%- endif %}
+
   <style>{{prerendered_css}}</style>
   {%- block head %}{%endblock head%}
 </head>

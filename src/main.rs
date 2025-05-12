@@ -10,7 +10,9 @@ use minijinja::{Environment, context};
 use tokio::{net::TcpListener, sync::RwLock, time};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::{
+    EnvFilter, Layer, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt,
+};
 use util::Templates;
 
 mod err;
@@ -34,14 +36,17 @@ async fn main() {
         }
     }
 
-    fmt()
-        .with_target(true)
-        .with_thread_ids(true)
-        .with_level(true)
-        .with_line_number(true)
-        .with_file(true)
-        .pretty()
-        .with_env_filter(EnvFilter::from_default_env())
+    Registry::default()
+        .with(
+            fmt::layer()
+                .pretty()
+                .with_target(true)
+                .with_thread_ids(true)
+                .with_level(true)
+                .with_line_number(true)
+                .with_file(true)
+                .with_filter(EnvFilter::from_default_env()),
+        )
         .init();
 
     match run().await {
@@ -76,9 +81,11 @@ async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
 }
 
 async fn run() -> color_eyre::Result<()> {
-    let addr = "0.0.0.0:1337"
+    let port = env::var("IRZEAN_PORT").unwrap_or_else(|_| "1337".to_string());
+
+    let addr = format!("0.0.0.0:{port}")
         .parse::<SocketAddr>()
-        .context("Couldn't parse `0.0.0.0:1337`")?;
+        .context(format!("Couldn't parse `0.0.0.0:{port}`"))?;
 
     let mut jinja_env = build_jinja_env()?;
     let mut repo_handler = RepoHandler::init()?;
@@ -143,6 +150,12 @@ fn insert_links(env: &mut Environment<'static>) {
     info!(
         "Using the root URI `{root_uri}`. To override, use the `IRZEAN_ROOT_URL` environment variable"
     );
+
+    #[cfg(feature = "development")]
+    {
+        env.add_global("environment", "DEV");
+    }
+
     let mut links = vec![];
 
     links.push(context! {
@@ -211,7 +224,12 @@ fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
 }
 
 pub(crate) fn root_url() -> String {
-    env::var("IRZEAN_ROOT_URL").unwrap_or_else(|_| "http://0.0.0.0:1337".to_string())
+    env::var("IRZEAN_ROOT_URL").unwrap_or_else(|_| {
+        format!(
+            "http://0.0.0.0:{}",
+            env::var("IRZEAN_PORT").unwrap_or_else(|_| "1337".to_string())
+        )
+    })
 }
 
 pub(crate) fn parental_mode() -> bool {

@@ -67,6 +67,7 @@ pub fn writing_url_from(slugified: &str) -> Result<String, Error> {
     Ok(format!("{}/writing/{}", root_url(), slugified))
 }
 
+#[tracing::instrument(skip(input))]
 fn preprocess(input: &str) -> String {
     input
         .lines()
@@ -81,7 +82,7 @@ fn preprocess(input: &str) -> String {
         .join("\n")
 }
 
-#[allow(clippy::unnecessary_wraps)]
+#[tracing::instrument(skip(input))]
 pub fn to_markdown(input: &str) -> Result<String, Error> {
     let input = preprocess(input);
     let input = input.as_str();
@@ -137,7 +138,7 @@ pub fn hash_scss() -> String {
 }
 
 pub fn prerender_css() -> Result<String, crate::err::Error> {
-    let main_scss = Statics::get("style/main.scss").ok_or_eyre("this should never fail.")?;
+    let main_scss = Statics::get("main.scss").ok_or_eyre("this should never fail.")?;
     let string = String::from_utf8(main_scss.data.to_vec()).map_err(Report::from)?;
     let rendered = grass::from_string(string, &grass::Options::default())?;
 
