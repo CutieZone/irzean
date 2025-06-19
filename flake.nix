@@ -33,7 +33,7 @@
 
         overlays = [
           (import rust-overlay)
-          (final: prev: {
+          (_final: _prev: {
             inherit (n2c.packages.${system}) nix2container;
           })
         ];
@@ -83,6 +83,7 @@
           bacon
           mold
           cargo-watch
+          cargo-audit
 
           cmake
           clang

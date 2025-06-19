@@ -30,24 +30,46 @@ async fn main() {
         }
     }
 
-    if env::var("RUST_LOG").is_err() {
-        unsafe {
-            env::set_var("RUST_LOG", "debug");
+    let _guard = if cfg!(feature = "development") {
+        match dotenvy::dotenv() {
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("Error setting up dotenvy: {e}");
+                return;
+            }
         }
-    }
 
-    Registry::default()
-        .with(
-            fmt::layer()
-                .pretty()
-                .with_target(true)
-                .with_thread_ids(true)
-                .with_level(true)
-                .with_line_number(true)
-                .with_file(true)
-                .with_filter(EnvFilter::from_default_env()),
+        Some(
+            match init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers() {
+                Ok(guard) => guard,
+                Err(e) => {
+                    eprintln!("Error setting up otel: {e}");
+                    return;
+                }
+            },
         )
-        .init();
+    } else {
+        if env::var("RUST_LOG").is_err() {
+            unsafe {
+                env::set_var("RUST_LOG", "debug");
+            }
+        }
+
+        Registry::default()
+            .with(
+                fmt::layer()
+                    .pretty()
+                    .with_target(true)
+                    .with_thread_ids(true)
+                    .with_level(true)
+                    .with_line_number(true)
+                    .with_file(true)
+                    .with_filter(EnvFilter::from_default_env()),
+            )
+            .init();
+
+        None
+    };
 
     match run().await {
         Ok(()) => {}
