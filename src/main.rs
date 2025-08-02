@@ -87,7 +87,13 @@ pub struct AppState {
 }
 
 async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
-    let mut interval = time::interval(Duration::from_secs(60));
+    let interval = env::var("IRZEAN_UPDATE_INTERVAL")
+        .map(|v| v.parse().ok())
+        .ok()
+        .flatten()
+        .unwrap_or(60);
+
+    let mut interval = time::interval(Duration::from_secs(interval));
 
     loop {
         interval.tick().await;
@@ -103,7 +109,10 @@ async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
 }
 
 async fn run() -> color_eyre::Result<()> {
-    let port = env::var("IRZEAN_PORT").unwrap_or_else(|_| "1337".to_string());
+    let port = env::var("IRZEAN_PORT").unwrap_or_else(|_| {
+        warn!("No `IRZEAN_PORT` provided: defaulting to port 1337");
+        "1337".to_string()
+    });
 
     let addr = format!("0.0.0.0:{port}")
         .parse::<SocketAddr>()

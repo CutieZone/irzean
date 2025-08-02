@@ -38,7 +38,7 @@ pub struct CommitRef {
 
 impl RepoHandler {
     pub fn init() -> Res<Self> {
-        const REPO_URL: &str = "https://git.cutie.zone/Lyssieth/irzean-writings";
+        let repo_url = env::var("IRZEAN_REPO_URL").context("IRZEAN_REPO_URL")?;
 
         let access_token = env::var("IRZEAN_ACCESS_TOKEN").context("IRZEAN_ACCESS_TOKEN")?;
         let clone_path: PathBuf = env::var("IRZEAN_CLONE_PATH")
@@ -63,7 +63,7 @@ impl RepoHandler {
 
             info!("`irzean-writings` cloned to {clone_path:?}");
 
-            builder.clone(REPO_URL, &clone_path)?
+            builder.clone(&repo_url, &clone_path)?
         };
 
         let head = repo.head()?;
