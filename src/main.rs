@@ -12,6 +12,8 @@ use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
 use util::Templates;
 
+use crate::fossil::{Writing, WritingMeta};
+
 mod err;
 mod fossil;
 mod routes;
@@ -91,10 +93,27 @@ async fn main() {
 pub struct AppState {
     pub jinja_env: Environment<'static>,
     pub repo_handler: Arc<RwLock<RepoHandler>>,
+    pub writing_cache: Arc<RwLock<Vec<Writing>>>,
     pub css_hash: String,
 }
 
-async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
+impl AppState {
+    pub async fn get_writing_metas(&self) -> Vec<WritingMeta> {
+        return self
+            .writing_cache
+            .read()
+            .await
+            .iter()
+            .map(|v| &v.meta)
+            .cloned()
+            .collect();
+    }
+}
+
+async fn background_task(
+    writing_cache: Arc<RwLock<Vec<Writing>>>,
+    repo_handler: Arc<RwLock<RepoHandler>>,
+) {
     let interval = env::var("IRZEAN_UPDATE_INTERVAL")
         .map(|v| v.parse().ok())
         .ok()
@@ -106,7 +125,24 @@ async fn background_task(repo_handler: Arc<RwLock<RepoHandler>>) {
     loop {
         interval.tick().await;
 
+        let previous_commit_ref = repo_handler.read().await.latest_commit.clone();
         let value = repo_handler.write().await.update();
+
+        if repo_handler.read().await.latest_commit != previous_commit_ref {
+            let new_files = repo_handler.read().await.file_list().await;
+
+            match new_files {
+                Ok(new_files) => {
+                    *writing_cache.write().await = new_files;
+                }
+                Err(err) => {
+                    warn!(?err, "failed to update cache");
+                }
+            }
+
+            // TODO: only re-parse and re-cache changed files
+        }
+
         match value {
             Ok(()) => {}
             Err(e) => {
@@ -131,8 +167,9 @@ async fn run() -> color_eyre::Result<()> {
     repo_handler.update()?;
 
     let repo_handler = Arc::new(RwLock::new(repo_handler));
+    let writing_cache = Arc::new(RwLock::new(repo_handler.read().await.file_list().await?));
 
-    tokio::spawn(background_task(repo_handler.clone()));
+    tokio::spawn(background_task(writing_cache.clone(), repo_handler.clone()));
 
     insert_links(&mut jinja_env);
 
@@ -146,6 +183,7 @@ async fn run() -> color_eyre::Result<()> {
     let app_state = AppState {
         jinja_env,
         repo_handler,
+        writing_cache,
         css_hash,
     };
 

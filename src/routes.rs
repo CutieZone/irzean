@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{mem, sync::Arc};
 
 use axum::{
     body::Body,
@@ -8,7 +8,7 @@ use axum::{
 };
 use color_eyre::{Report, eyre::OptionExt};
 use serde::Deserialize;
-use tracing::{debug, warn};
+use tracing::debug;
 
 use crate::{
     AppState,
@@ -35,16 +35,15 @@ pub async fn writing(
     UriPath(path): UriPath<String>,
     s: State<Arc<AppState>>,
 ) -> Result<Response, Error> {
-    let writing = s.repo_handler.read().await.get_writing(&path).await;
+    let writing_cache = s.writing_cache.read().await;
+    let writing = writing_cache.iter().find(|v| v.title == path).cloned();
+    // we've either found something, or it's None; either way safe to early drop
+    mem::drop(writing_cache);
 
-    let writing = match writing {
-        Ok(writing) => writing,
-        Err(e) => {
-            warn!(?e, "Couldn't get writing.");
-            let resp = not_found(uri, s).await?;
+    let Some(writing) = writing else {
+        let resp = not_found(uri, s).await?;
 
-            return Ok(resp.into_response());
-        }
+        return Ok(resp.into_response());
     };
 
     let tmpl = s.jinja_env.get_template("html/writing.jinja")?;
@@ -84,11 +83,8 @@ pub async fn specific_tag(
         .ok_or_eyre(format!("No tag with name `{name}` found"))?;
 
     let writings_with_tag = s
-        .repo_handler
-        .read()
+        .get_writing_metas()
         .await
-        .file_list()
-        .await?
         .into_iter()
         .filter(|v| {
             if name == "nsfw" {
@@ -111,7 +107,7 @@ pub async fn specific_tag(
 pub async fn list(s: State<Arc<AppState>>) -> Result<Html<String>, Error> {
     let tmpl = s.jinja_env.get_template("html/list.jinja")?;
 
-    let writings = s.repo_handler.read().await.file_list().await?;
+    let writings = s.get_writing_metas().await;
 
     let rendered = tmpl.render(templates::List::new(writings))?;
 

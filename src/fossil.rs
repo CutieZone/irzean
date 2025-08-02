@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     env, fmt,
+    ops::Deref,
     path::PathBuf,
     str::FromStr,
     time::{Duration, SystemTime},
@@ -9,6 +10,7 @@ use std::{
 
 use async_walkdir::{Filtering, WalkDir};
 use color_eyre::eyre::{Context, OptionExt, eyre};
+use facet::Facet;
 use futures_lite::StreamExt;
 use git2::{
     Cred, FetchOptions, RemoteCallbacks, Repository,
@@ -17,7 +19,6 @@ use git2::{
 use serde::{Deserialize, Serialize, de::Visitor};
 use tokio::fs;
 use tracing::{debug, info, warn};
-use yaml_rust2::YamlLoader;
 
 use crate::{parental_mode, util};
 
@@ -30,7 +31,7 @@ pub struct RepoHandler {
     pub latest_commit: CommitRef,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CommitRef {
     pub shorthand: String,
     pub commit_time_utc: SystemTime,
@@ -127,62 +128,25 @@ impl RepoHandler {
             let ending_hr = ending_hr + 3; // account for the offset
 
             let preamble = &content[3..ending_hr];
+            let doc: FrontMatter = facet_yaml::from_str(preamble)?;
 
-            let docs = YamlLoader::load_from_str(preamble)?;
-            let Some(doc) = docs.first() else {
-                warn!("No YAML documents loadable in {relative:?}, skipping");
-                continue;
-            };
-
-            let Some(title) = doc["title"].as_str() else {
-                warn!("No title found in {relative:?}, skipping");
-                continue;
-            };
-            let Some(date_authored) = doc["date"].as_str() else {
-                warn!("no date found in {relative:?}, skipping");
-                continue;
-            };
-            let date_authored: DateTriple = date_authored.parse()?;
-
-            let tags = doc["tags"].as_vec().map_or_else(Vec::new, |tags| {
-                let mut out = Vec::new();
-
-                for tag in tags {
-                    let Some(tag) = tag.as_str() else {
-                        warn!(?tag, "Invalid tag, skipping");
-                        continue;
-                    };
-
-                    out.push(tag.to_string());
-                }
-
-                out
-            });
-
-            let is_nsfw = doc["nsfw"].as_bool().unwrap_or_default();
-            let is_hidden = doc["hidden"].as_bool().unwrap_or_default();
-
-            let description = doc["description"].as_str().map(ToString::to_string);
-
-            let previous = doc["previous"].as_str().map(ToString::to_string);
-            let next = doc["next"].as_str().map(ToString::to_string);
-
-            if parental_mode() && is_nsfw {
+            if parental_mode() && doc.nsfw.unwrap_or_default() {
                 continue; // skip any and all nsfw content early in the process
             }
 
-            list.push(Writing {
+            let meta = WritingMeta {
+                description: doc.description,
+                tags: doc.tags.unwrap_or_default(),
+                is_nsfw: doc.nsfw.unwrap_or_default(),
+                is_hidden: doc.hidden.unwrap_or_default(),
+                previous: doc.previous,
+                next: doc.next,
                 rel_path: relative.to_path_buf(),
-                title: title.to_string(),
-                date_authored,
-                content,
-                description,
-                tags,
-                is_nsfw,
-                is_hidden,
-                previous,
-                next,
-            });
+                title: doc.title,
+                date_authored: doc.date,
+            };
+
+            list.push(Writing { meta, content });
         }
 
         list.sort_by_cached_key(|v| v.date_authored);
@@ -287,8 +251,20 @@ impl RepoHandler {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Writing {
+#[derive(Clone, Facet)]
+pub struct FrontMatter {
+    pub title: String,
+    pub date: DateTriple,
+    pub tags: Option<Vec<String>>,
+    pub nsfw: Option<bool>,
+    pub hidden: Option<bool>,
+    pub description: Option<String>,
+    pub previous: Option<String>,
+    pub next: Option<String>,
+}
+
+#[derive(Debug, Facet, Clone, Serialize, Deserialize)]
+pub struct WritingMeta {
     pub rel_path: PathBuf,
     pub title: String,
     pub date_authored: DateTriple,
@@ -296,12 +272,27 @@ pub struct Writing {
     pub description: Option<String>,
     pub is_nsfw: bool,
     pub is_hidden: bool,
-    pub content: String,
     pub previous: Option<String>,
     pub next: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Facet, Clone, Serialize, Deserialize)]
+pub struct Writing {
+    #[facet(flatten)]
+    #[serde(flatten)]
+    pub meta: WritingMeta,
+    pub content: String,
+}
+
+impl Deref for Writing {
+    type Target = WritingMeta;
+
+    fn deref(&self) -> &Self::Target {
+        &self.meta
+    }
+}
+
+#[derive(Debug, Facet, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct DateTriple {
     pub year: u16,
     pub month: u8,

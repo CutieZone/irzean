@@ -3,10 +3,15 @@
 use std::collections::HashMap;
 
 use axum::http::{Method, StatusCode};
+use facet::Facet;
 use minijinja::value::ViaDeserialize;
 use serde::Serialize;
 
-use crate::{fossil::Writing, root_url, util::writing_url_for};
+use crate::{
+    fossil::{Writing, WritingMeta},
+    root_url,
+    util::writing_url_for,
+};
 
 #[derive(Debug, Serialize)]
 pub struct Error {
@@ -42,16 +47,16 @@ impl Error {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Facet, Serialize)]
 pub struct List {
     pub title: String,
-    pub writings: Vec<Writing>,
+    pub writings: Vec<WritingMeta>,
     pub description: String,
     pub url: String,
 }
 
 impl List {
-    pub fn new(w: Vec<Writing>) -> Self {
+    pub fn new(w: Vec<WritingMeta>) -> Self {
         Self {
             title: "List".to_string(),
             writings: w,
@@ -80,17 +85,17 @@ impl Tags {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Facet, Serialize)]
 pub struct SpecificTag {
     pub title: String,
     pub tag_name: String,
-    pub writings: Vec<Writing>,
+    pub writings: Vec<WritingMeta>,
     pub description: String,
     pub url: String,
 }
 
 impl SpecificTag {
-    pub fn new(tag_name: &str, writings: Vec<Writing>) -> Self {
+    pub fn new(tag_name: &str, writings: Vec<WritingMeta>) -> Self {
         Self {
             title: format!("Writings Tagged {tag_name}"),
             tag_name: tag_name.to_string(),
@@ -101,11 +106,11 @@ impl SpecificTag {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Facet, Serialize)]
 pub struct Reader {
     pub writing: Writing,
     pub title: String,
-    #[serde(rename = "type")]
+    #[facet(rename = "type")]
     pub kind: String,
     pub article: Article,
     pub description: Option<String>,
@@ -129,7 +134,7 @@ impl Reader {
     }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Facet, Serialize)]
 pub struct Article {
     pub published_time: String,
     pub author: String,

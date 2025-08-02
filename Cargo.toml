@@ -19,6 +19,9 @@ blake3 = "1.5"
 color-eyre = "0.6"
 comrak = "0.40"
 dotenvy = {version ="0.15", optional=true}
+facet = "0.28.0"
+facet-pretty = { version = "0.28.0", features = ["alloc"] }
+facet-yaml = { version = "0.28.0", features = ["std", "alloc"] }
 futures-lite = "2.6"
 git2 = { version = "0.20", features = [
   "vendored-libgit2",
@@ -35,7 +38,6 @@ tower = { version = "0.5", features = ["full"] }
 tower-http = { version = "0.6", features = ["compression-br", "compression-deflate", "compression-gzip", "compression-zstd", "full"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-yaml-rust2 = "0.10"
 
 [features]
 default = ["development"]
