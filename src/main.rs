@@ -10,9 +10,6 @@ use minijinja::{Environment, context};
 use tokio::{net::TcpListener, sync::RwLock, time};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
-use tracing_subscriber::{
-    EnvFilter, Layer, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt,
-};
 use util::Templates;
 
 mod err;
@@ -30,45 +27,56 @@ async fn main() {
         }
     }
 
-    let _guard = if cfg!(feature = "development") {
-        match dotenvy::dotenv() {
-            Ok(_) => {}
-            Err(e) => {
-                eprintln!("Error setting up dotenvy: {e}");
-                return;
-            }
-        }
-
-        Some(
-            match init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers() {
-                Ok(guard) => guard,
+    let _guard = {
+        #[cfg(feature = "development")]
+        {
+            match dotenvy::dotenv() {
+                Ok(_) => {}
                 Err(e) => {
-                    eprintln!("Error setting up otel: {e}");
+                    eprintln!("Error setting up dotenvy: {e}");
                     return;
                 }
-            },
-        )
-    } else {
-        if env::var("RUST_LOG").is_err() {
-            unsafe {
-                env::set_var("RUST_LOG", "debug");
             }
+
+            Some(
+                match init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers() {
+                    Ok(guard) => guard,
+                    Err(e) => {
+                        eprintln!("Error setting up otel: {e}");
+                        return;
+                    }
+                },
+            )
         }
 
-        Registry::default()
-            .with(
-                fmt::layer()
-                    .pretty()
-                    .with_target(true)
-                    .with_thread_ids(true)
-                    .with_level(true)
-                    .with_line_number(true)
-                    .with_file(true)
-                    .with_filter(EnvFilter::from_default_env()),
-            )
-            .init();
+        #[cfg(not(feature = "development"))]
+        {
+            use tracing_subscriber::{
+                EnvFilter, Layer, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt,
+            };
 
-        None
+            if env::var("RUST_LOG").is_err() {
+                unsafe {
+                    // SAFETY: Required as of Rust 2024, should be fine though
+                    env::set_var("RUST_LOG", "debug");
+                }
+            }
+
+            Registry::default()
+                .with(
+                    fmt::layer()
+                        .pretty()
+                        .with_target(true)
+                        .with_thread_ids(true)
+                        .with_level(true)
+                        .with_line_number(true)
+                        .with_file(true)
+                        .with_filter(EnvFilter::from_default_env()),
+                )
+                .init();
+
+            Option::<()>::None
+        }
     };
 
     match run().await {

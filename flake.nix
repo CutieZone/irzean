@@ -1,20 +1,16 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-
     utils.url = "github:numtide/flake-utils";
 
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
-
       inputs.nixpkgs.follows = "nixpkgs";
     };
     crane.url = "github:ipetkov/crane";
 
     n2c = {
       url = "github:nlewo/nix2container";
-
-      inputs.flake-utils.follows = "utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

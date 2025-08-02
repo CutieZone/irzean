@@ -88,6 +88,7 @@ impl RepoHandler {
         })
     }
 
+    #[allow(clippy::cognitive_complexity, reason = "i disagree")]
     pub async fn file_list(&self) -> Res<Vec<Writing>> {
         let mut walk = WalkDir::new(&self.clone_path).filter(async |v| {
             v.path()
@@ -269,7 +270,7 @@ impl RepoHandler {
         Ok(())
     }
 
-    fn fetch_options(&self) -> FetchOptions {
+    fn fetch_options(&'_ self) -> FetchOptions<'_> {
         let mut callbacks = RemoteCallbacks::new();
         callbacks.credentials(|_url, username_from_url, _allowed_types| {
             Cred::userpass_plaintext(username_from_url.unwrap_or("irzean"), &self.access_token)
