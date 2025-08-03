@@ -314,7 +314,12 @@ impl DateTriple {
             self.month.try_into()?, // Should, in theory, be valid
             self.day,
         )?;
-        let time = time::macros::time!(00:00:00);
+
+        debug!(?date, "got calendar date from y/m/d");
+
+        let time = time::macros::time!(01:00:00);
+
+        debug!(?time, "always 1am my dudes");
 
         Ok(PrimitiveDateTime::new(date, time))
     }
