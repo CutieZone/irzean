@@ -5,7 +5,7 @@ use color_eyre::{Report, eyre::OptionExt};
 use comrak::{Arena, Options, Plugins};
 use minijinja::{Error, ErrorKind, value::ViaDeserialize};
 use slug::slugify;
-use tracing::{debug, warn};
+use tracing::warn;
 
 use crate::{fossil::WritingMeta, root_url};
 
@@ -24,7 +24,7 @@ pub fn slugify_path(path: &Path) -> String {
 
     let mut comps = 0;
     for comp in path.components() {
-        debug!(?comp, "the component");
+        // debug!(?comp, "the component");
         comps += 1;
 
         match comp {
