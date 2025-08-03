@@ -2,7 +2,7 @@
 {%- block body %}
     {%- if query is defined and query %}
         <h1>
-            Search results for <code>{{ query }}</code>
+            Search results for <code>{{ query | escape }}</code>
         </h1>
     {%- else %}
         <h1>Crappy Search Page</h1>
@@ -14,7 +14,10 @@
     {%- endif %}
     <form action="{{ url }}" method="GET">
         {%- if query is defined and query %}
-            <input type="text" placeholder="search here..." name="q" value="{{ query }}" />
+            <input type="text"
+                   placeholder="search here..."
+                   name="q"
+                   value="{{ query | escape }}" />
         {%- else %}
             <input type="text" placeholder="search here..." name="q" />
         {%- endif %}
