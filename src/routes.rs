@@ -153,12 +153,12 @@ pub async fn sitemap(s: State<Arc<AppState>>) -> Result<Response, Error> {
     entries.push(UrlEntry::new(format!("{root}/tags"), site_lastmod));
 
     for (tag, last) in tags {
-        entries.push(UrlEntry::new(format!("{root}{}", tag_url_for(&tag)?), last));
+        entries.push(UrlEntry::new(tag_url_for(&tag)?, last));
     }
 
     for w in writings {
         entries.push(UrlEntry::new(
-            format!("{root}{}", writing_url_for(&w.meta)),
+            writing_url_for(&w.meta),
             Some(w.meta.date_authored.into_real_datetime()?),
         ));
     }

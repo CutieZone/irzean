@@ -24,6 +24,7 @@ pub fn xml_escape(s: &str) -> String {
         .replace('>', "&gt;")
         .replace('"', "&quot;")
         .replace('\'', "&apos;")
+        .replace(' ', "%20")
 }
 
 pub fn render_sitemap(entries: Vec<UrlEntry>) -> String {
