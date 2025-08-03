@@ -7,7 +7,7 @@ use minijinja::{Error, ErrorKind, value::ViaDeserialize};
 use slug::slugify;
 use tracing::{debug, warn};
 
-use crate::{fossil::Writing, root_url};
+use crate::{fossil::WritingMeta, root_url};
 
 mod embed;
 pub mod tokio_fs;
@@ -56,7 +56,7 @@ pub fn slugify_path(path: &Path) -> String {
 }
 
 #[allow(clippy::unnecessary_wraps, clippy::needless_pass_by_value)]
-pub fn writing_url_for(writing: ViaDeserialize<Writing>) -> Result<String, Error> {
+pub fn writing_url_for(writing: ViaDeserialize<WritingMeta>) -> Result<String, Error> {
     let out = format!("{}/writing/{}", root_url(), slugify_path(&writing.rel_path));
 
     Ok(out)
