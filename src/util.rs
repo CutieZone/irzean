@@ -16,8 +16,14 @@ pub use embed::{Statics, Templates};
 pub use sitemap::{UrlEntry, render_sitemap};
 
 pub async fn reindex(s: &AppState, mut writer: IndexWriter) -> color_eyre::Result<()> {
-    let sc = s.schema.clone();
+    // Clear index before we re-index
+    writer.delete_all_documents()?;
+    writer.garbage_collect_files().await?;
 
+    // Work on a clone so we don't block the writing cache for too long
+    let cache = s.writing_cache.read().await.clone();
+
+    let sc = s.schema.clone();
     let title = sc.get_field("title")?;
     let content = sc.get_field("content")?;
     let tags = sc.get_field("tags")?;
@@ -28,8 +34,6 @@ pub async fn reindex(s: &AppState, mut writer: IndexWriter) -> color_eyre::Resul
     let slug = sc.get_field("slug")?;
     let word_count = sc.get_field("word_count")?;
 
-    let cache = s.writing_cache.read().await.clone();
-    // Work on a clone so we don't block the writing cache for too long
     for writing in cache.writings.iter() {
         if writing.is_hidden {
             continue; // skip :3
