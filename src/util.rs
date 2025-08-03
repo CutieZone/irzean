@@ -10,7 +10,6 @@ use tracing::{debug, warn};
 use crate::{fossil::WritingMeta, root_url};
 
 mod embed;
-pub mod tokio_fs;
 pub use embed::{Statics, Templates};
 
 #[allow(clippy::unnecessary_wraps)]
