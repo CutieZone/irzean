@@ -12,7 +12,10 @@ use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
 use util::Templates;
 
-use crate::fossil::{Writing, WritingMeta};
+use crate::{
+    fossil::{Writing, WritingMeta},
+    util::slugify_path,
+};
 
 mod err;
 mod fossil;
@@ -98,6 +101,15 @@ pub struct AppState {
 }
 
 impl AppState {
+    pub async fn get_writing(&self, path: &str) -> Option<Writing> {
+        let cache = self.writing_cache.read().await;
+
+        cache
+            .iter()
+            .find(|v| slugify_path(&v.rel_path) == path)
+            .cloned()
+    }
+
     pub async fn get_writing_metas(&self) -> Vec<WritingMeta> {
         return self
             .writing_cache

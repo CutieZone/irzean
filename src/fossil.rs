@@ -20,7 +20,7 @@ use serde::{Deserialize, Serialize, de::Visitor};
 use tokio::fs;
 use tracing::{debug, info, warn};
 
-use crate::{parental_mode, util};
+use crate::parental_mode;
 
 type Res<T> = color_eyre::Result<T>;
 
@@ -154,19 +154,6 @@ impl RepoHandler {
         list.shrink_to_fit();
 
         Ok(list)
-    }
-
-    pub async fn get_writing(&self, relative_path: &str) -> Res<Writing> {
-        let file_list = self.file_list().await?;
-
-        file_list
-            .into_iter()
-            .find(|v| {
-                let rel_path = util::slugify_path(&v.rel_path);
-
-                rel_path.eq(relative_path)
-            })
-            .ok_or_eyre("Couldn't find a suitable Writing")
     }
 
     pub async fn tag_list(&self) -> Res<HashMap<String, u64>> {

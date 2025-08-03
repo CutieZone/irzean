@@ -1,4 +1,4 @@
-use std::{mem, sync::Arc};
+use std::sync::Arc;
 
 use axum::{
     body::Body,
@@ -35,10 +35,7 @@ pub async fn writing(
     UriPath(path): UriPath<String>,
     s: State<Arc<AppState>>,
 ) -> Result<Response, Error> {
-    let writing_cache = s.writing_cache.read().await;
-    let writing = writing_cache.iter().find(|v| v.title == path).cloned();
-    // we've either found something, or it's None; either way safe to early drop
-    mem::drop(writing_cache);
+    let writing = s.get_writing(&path).await;
 
     let Some(writing) = writing else {
         let resp = not_found(uri, s).await?;
