@@ -22,3 +22,4 @@ Or... "Renders like a server, loads like a static site"
 - tag index, listing, sitemap generator
 - exists almost entirely in memory at all times
 - `rust-embed` for static non-code
+- ~14MiB memory usage with my writings directory and setup
