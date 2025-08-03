@@ -7,6 +7,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
 };
 use color_eyre::eyre::OptionExt;
+use tracing::debug;
 
 use crate::{
     AppState,
@@ -129,6 +130,8 @@ pub async fn sitemap(s: State<Arc<AppState>>) -> Result<Response, Error> {
         .flat_map(|w| w.date_authored.into_real_datetime())
         .max();
 
+    debug!(?site_lastmod, "site lastmod is...");
+
     let mut tags = Vec::new();
     for tag in cache.tags.iter() {
         let last = writings
@@ -140,6 +143,8 @@ pub async fn sitemap(s: State<Arc<AppState>>) -> Result<Response, Error> {
             })
             .flatten()
             .max();
+
+        debug!(?last, "got last");
 
         tags.push((tag.clone(), last));
     }
@@ -157,10 +162,10 @@ pub async fn sitemap(s: State<Arc<AppState>>) -> Result<Response, Error> {
     }
 
     for w in writings {
-        entries.push(UrlEntry::new(
-            writing_url_for(&w.meta),
-            Some(w.meta.date_authored.into_real_datetime()?),
-        ));
+        let realdt = w.meta.date_authored.into_real_datetime()?;
+
+        debug!(?realdt, "real dt for {}", w.meta.title);
+        entries.push(UrlEntry::new(writing_url_for(&w.meta), Some(realdt)));
     }
 
     let xml = render_sitemap(entries);

@@ -1,4 +1,5 @@
-use time::PrimitiveDateTime;
+use time::{PrimitiveDateTime, format_description::well_known::Rfc3339};
+use tracing::debug;
 
 pub struct UrlEntry {
     loc: String,
@@ -8,13 +9,14 @@ pub struct UrlEntry {
 
 impl UrlEntry {
     pub fn new(loc: String, dt: Option<PrimitiveDateTime>) -> Self {
-        let lastmod = dt
-            .map(|d| d.format(&time::format_description::well_known::Rfc3339))
-            .transpose()
-            .ok()
-            .flatten();
+        let lastmod = dt.map(|d| d.assume_utc().format(&Rfc3339)).transpose();
 
-        Self { loc, lastmod }
+        debug!(?lastmod);
+
+        Self {
+            loc,
+            lastmod: lastmod.ok().flatten(),
+        }
     }
 }
 
