@@ -1,13 +1,19 @@
-use std::sync::Arc;
+use std::{mem, sync::Arc};
 
 use axum::{
+    body::Body,
     extract::{Path as UriPath, State},
     http::{Method, StatusCode, Uri},
     response::{Html, IntoResponse, Response},
 };
 use color_eyre::eyre::OptionExt;
 
-use crate::{AppState, err::Error};
+use crate::{
+    AppState,
+    err::Error,
+    parental_mode, root_url,
+    util::{UrlEntry, render_sitemap, tag_url_for, writing_url_for},
+};
 
 mod templates;
 
@@ -102,6 +108,68 @@ pub async fn list(s: State<Arc<AppState>>) -> Result<Html<String>, Error> {
     let rendered = tmpl.render(templates::List::new(writings))?;
 
     Ok(Html(rendered))
+}
+
+#[axum::debug_handler]
+#[tracing::instrument(skip(s))]
+pub async fn sitemap(s: State<Arc<AppState>>) -> Result<Response, Error> {
+    let cache = s.writing_cache.read().await;
+    let root = root_url();
+    let parental = parental_mode();
+
+    let writings = cache
+        .writings
+        .iter()
+        .filter(|w| !(parental && w.meta.is_nsfw))
+        .cloned()
+        .collect::<Vec<_>>();
+
+    let site_lastmod = writings
+        .iter()
+        .flat_map(|w| w.date_authored.into_real_datetime())
+        .max();
+
+    let mut tags = Vec::new();
+    for tag in cache.tags.iter() {
+        let last = writings
+            .iter()
+            .filter_map(|w| {
+                w.tags
+                    .contains(tag)
+                    .then_some(w.date_authored.into_real_datetime())
+            })
+            .flatten()
+            .max();
+
+        tags.push((tag.clone(), last));
+    }
+
+    mem::drop(cache); // early release
+
+    let mut entries = Vec::new();
+
+    entries.push(UrlEntry::new(format!("{root}/"), site_lastmod));
+    entries.push(UrlEntry::new(format!("{root}/list"), site_lastmod));
+    entries.push(UrlEntry::new(format!("{root}/tags"), site_lastmod));
+
+    for (tag, last) in tags {
+        entries.push(UrlEntry::new(format!("{root}{}", tag_url_for(&tag)?), last));
+    }
+
+    for w in writings {
+        entries.push(UrlEntry::new(
+            format!("{root}{}", writing_url_for(&w.meta)),
+            Some(w.meta.date_authored.into_real_datetime()?),
+        ));
+    }
+
+    let xml = render_sitemap(entries);
+
+    let mut resp = Response::new(Body::new(xml));
+    resp.headers_mut()
+        .insert("Content-Type", "application/xml; charset=utf-8".parse()?);
+
+    Ok(resp)
 }
 
 #[axum::debug_handler]

@@ -33,6 +33,7 @@ minijinja = { version = "2.6", features = ["loader", "speedups"] }
 rust-embed = { version = "8.5", features = ["axum", "compression"] }
 serde = { version = "1.0", features = ["derive"] }
 slug = "0.1"
+time = { version = "0.3.41", features = ["formatting", "macros", "serde", "serde-human-readable", "serde-well-known"] }
 tokio = { version = "1.43", features = ["full"] }
 tower = { version = "0.5", features = ["full"] }
 tower-http = { version = "0.6", features = ["compression-br", "compression-deflate", "compression-gzip", "compression-zstd", "full"] }

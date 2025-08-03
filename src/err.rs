@@ -14,7 +14,9 @@ pub enum Error {
     Sass(Box<grass::Error>),
     Axum(axum::Error),
     AxumHttp(axum::http::Error),
+    AxumHttpHeader(axum::http::header::InvalidHeaderValue),
 
+    ComponentRange(time::error::ComponentRange),
     Internal(color_eyre::Report),
 }
 
@@ -45,6 +47,14 @@ impl fmt::Display for Error {
                 warn!(?e, "Axum HTTP Error");
                 write!(f, "Axum HTTP Error: {e}")
             }
+            Self::AxumHttpHeader(e) => {
+                warn!(?e, "Axum HTTP Header Error");
+                write!(f, "Axum HTTP Header Error: {e}")
+            }
+            Self::ComponentRange(e) => {
+                warn!(?e, "Component Range Error");
+                write!(f, "Component Range Error: {e}")
+            }
             Self::Internal(e) => {
                 warn!(?e, "Internal Error");
                 write!(f, "Internal Error: {e}")
@@ -71,6 +81,12 @@ impl fmt::Display for Error {
             }
             Self::AxumHttp(e) => {
                 warn!(?e, "Axum HTTP Error")
+            }
+            Self::AxumHttpHeader(e) => {
+                warn!(?e, "Axum HTTP Header Error");
+            }
+            Self::ComponentRange(e) => {
+                warn!(?e, "Component Range Error")
             }
             Self::Internal(e) => {
                 warn!(?e, "Internal Error")
@@ -125,6 +141,18 @@ impl From<axum::Error> for Error {
 impl From<axum::http::Error> for Error {
     fn from(value: axum::http::Error) -> Self {
         Self::AxumHttp(value)
+    }
+}
+
+impl From<axum::http::header::InvalidHeaderValue> for Error {
+    fn from(value: axum::http::header::InvalidHeaderValue) -> Self {
+        Self::AxumHttpHeader(value)
+    }
+}
+
+impl From<time::error::ComponentRange> for Error {
+    fn from(value: time::error::ComponentRange) -> Self {
+        Self::ComponentRange(value)
     }
 }
 

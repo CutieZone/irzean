@@ -4,6 +4,7 @@ use std::{
     ops::Deref,
     path::PathBuf,
     str::FromStr,
+    sync::Arc,
     time::{Duration, SystemTime},
     vec::Vec,
 };
@@ -17,10 +18,11 @@ use git2::{
     build::{CheckoutBuilder, RepoBuilder},
 };
 use serde::{Deserialize, Serialize, de::Visitor};
+use time::{Date, PrimitiveDateTime};
 use tokio::fs;
 use tracing::{debug, info, warn};
 
-use crate::parental_mode;
+use crate::{err::Error, parental_mode};
 
 type Res<T> = color_eyre::Result<T>;
 
@@ -257,6 +259,18 @@ pub struct FrontMatter {
     pub next: Option<String>,
 }
 
+#[derive(Facet)]
+pub struct WritingCache {
+    pub writings: Arc<Vec<Writing>>,
+    pub tags: Arc<Vec<String>>,
+}
+
+impl WritingCache {
+    pub fn metas(&self) -> Vec<WritingMeta> {
+        self.writings.iter().map(|v| v.meta.clone()).collect()
+    }
+}
+
 #[derive(Debug, Facet, Clone, Serialize, Deserialize)]
 pub struct WritingMeta {
     pub rel_path: PathBuf,
@@ -291,6 +305,19 @@ pub struct DateTriple {
     pub year: u16,
     pub month: u8,
     pub day: u8,
+}
+
+impl DateTriple {
+    pub fn into_real_datetime(self) -> Result<PrimitiveDateTime, Error> {
+        let date = Date::from_calendar_date(
+            self.year.into(),
+            self.month.try_into()?, // Should, in theory, be valid
+            self.day,
+        )?;
+        let time = time::macros::time!(00:00:00);
+
+        Ok(PrimitiveDateTime::new(date, time))
+    }
 }
 
 impl FromStr for DateTriple {

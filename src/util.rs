@@ -10,7 +10,9 @@ use tracing::{debug, warn};
 use crate::{fossil::WritingMeta, root_url};
 
 mod embed;
+mod sitemap;
 pub use embed::{Statics, Templates};
+pub use sitemap::{UrlEntry, render_sitemap};
 
 #[allow(clippy::unnecessary_wraps)]
 pub fn tag_url_for(name: &str) -> Result<String, Error> {

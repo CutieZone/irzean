@@ -13,7 +13,7 @@ use tracing::{debug, error, info, warn};
 use util::Templates;
 
 use crate::{
-    fossil::{Writing, WritingMeta},
+    fossil::{Writing, WritingCache, WritingMeta},
     util::slugify_path,
 };
 
@@ -96,7 +96,7 @@ async fn main() {
 pub struct AppState {
     pub jinja_env: Environment<'static>,
     pub repo_handler: Arc<RwLock<RepoHandler>>,
-    pub writing_cache: Arc<RwLock<Vec<Writing>>>,
+    pub writing_cache: Arc<RwLock<WritingCache>>,
     pub css_hash: String,
 }
 
@@ -105,25 +105,19 @@ impl AppState {
         let cache = self.writing_cache.read().await;
 
         cache
+            .writings
             .iter()
             .find(|v| slugify_path(&v.rel_path) == path)
             .cloned()
     }
 
     pub async fn get_writing_metas(&self) -> Vec<WritingMeta> {
-        return self
-            .writing_cache
-            .read()
-            .await
-            .iter()
-            .map(|v| &v.meta)
-            .cloned()
-            .collect();
+        self.writing_cache.read().await.metas()
     }
 }
 
 async fn background_task(
-    writing_cache: Arc<RwLock<Vec<Writing>>>,
+    writing_cache: Arc<RwLock<WritingCache>>,
     repo_handler: Arc<RwLock<RepoHandler>>,
 ) {
     let interval = env::var("IRZEAN_UPDATE_INTERVAL")
@@ -145,7 +139,17 @@ async fn background_task(
 
             match new_files {
                 Ok(new_files) => {
-                    *writing_cache.write().await = new_files;
+                    let mut writing_cache = writing_cache.write().await;
+
+                    writing_cache.writings = Arc::new(new_files);
+                    writing_cache.tags = Arc::new(
+                        writing_cache
+                            .writings
+                            .iter()
+                            .flat_map(|v| &v.tags)
+                            .map(|v| v.to_lowercase()) // canonicalize :3
+                            .collect(),
+                    );
                 }
                 Err(err) => {
                     warn!(?err, "failed to update cache");
@@ -179,7 +183,20 @@ async fn run() -> color_eyre::Result<()> {
     repo_handler.update()?;
 
     let repo_handler = Arc::new(RwLock::new(repo_handler));
-    let writing_cache = Arc::new(RwLock::new(repo_handler.read().await.file_list().await?));
+
+    let file_list = Arc::new(repo_handler.read().await.file_list().await?);
+
+    let writing_cache = WritingCache {
+        writings: file_list.clone(),
+        tags: Arc::new(
+            file_list
+                .iter()
+                .flat_map(|v| &v.tags)
+                .map(|v| v.to_lowercase()) // canonicalize :3
+                .collect(),
+        ),
+    };
+    let writing_cache = Arc::new(RwLock::new(writing_cache));
 
     tokio::spawn(background_task(writing_cache.clone(), repo_handler.clone()));
 
@@ -204,8 +221,8 @@ async fn run() -> color_eyre::Result<()> {
         .route("/list", get(routes::list))
         .route("/tags", get(routes::tags))
         .route("/tag/{name}", get(routes::specific_tag))
-        // .route("/style/{path}", get(routes::style)) // We no longer have need for this
         .route("/writing/{*path}", get(routes::writing))
+        .route("/sitemap.xml", get(routes::sitemap))
         .fallback(routes::not_found)
         .method_not_allowed_fallback(routes::method_not_allowed)
         .with_state(Arc::new(app_state))
