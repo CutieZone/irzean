@@ -143,7 +143,7 @@ impl RepoHandler {
                 next: doc.next,
                 rel_path: relative.to_path_buf(),
                 title: doc.title,
-                date_authored: doc.date,
+                date_authored: doc.date.parse()?,
             };
 
             list.push(Writing { meta, content });
@@ -151,6 +151,7 @@ impl RepoHandler {
 
         list.sort_by_cached_key(|v| v.date_authored);
         list.reverse();
+        list.shrink_to_fit();
 
         Ok(list)
     }
@@ -254,12 +255,18 @@ impl RepoHandler {
 #[derive(Clone, Facet)]
 pub struct FrontMatter {
     pub title: String,
-    pub date: DateTriple,
+    pub date: String,
+    #[facet(default)]
     pub tags: Option<Vec<String>>,
+    #[facet(default)]
     pub nsfw: Option<bool>,
+    #[facet(default)]
     pub hidden: Option<bool>,
+    #[facet(default)]
     pub description: Option<String>,
+    #[facet(default)]
     pub previous: Option<String>,
+    #[facet(default)]
     pub next: Option<String>,
 }
 
