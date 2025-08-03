@@ -143,35 +143,35 @@ pub struct CacheBust {
     pub v: String,
 }
 
-#[axum::debug_handler]
-#[tracing::instrument(skip(s))]
-pub async fn style(
-    UriPath(name): UriPath<String>,
-    Query(v): Query<CacheBust>,
-    uri: Uri,
-    s: State<Arc<AppState>>,
-) -> Result<Response, Error> {
-    if v.v != s.css_hash {
-        return Ok(Redirect::permanent(&format!("/style/{name}?v={}", s.css_hash)).into_response());
-    }
+// #[axum::debug_handler]
+// #[tracing::instrument(skip(s))]
+// pub async fn style(
+//     UriPath(name): UriPath<String>,
+//     Query(v): Query<CacheBust>,
+//     uri: Uri,
+//     s: State<Arc<AppState>>,
+// ) -> Result<Response, Error> {
+//     if v.v != s.css_hash {
+//         return Ok(Redirect::permanent(&format!("/style/{name}?v={}", s.css_hash)).into_response());
+//     }
 
-    let base_path = name.replace(".css", ".scss");
+//     let base_path = name.replace(".css", ".scss");
 
-    if let Some(data) = Statics::get(&base_path) {
-        let string = String::from_utf8(data.data.to_vec()).map_err(Report::from)?;
-        let rendered = grass::from_string(&string, &grass_options())?;
+//     if let Some(data) = Statics::get(&base_path) {
+//         let string = String::from_utf8(data.data.to_vec()).map_err(Report::from)?;
+//         let rendered = grass::from_string(&string, &grass_options())?;
 
-        Response::builder()
-            .status(StatusCode::OK)
-            .header("content-type", "text/css")
-            .header("cache-control", "public, max-age=31536000, immutable")
-            .body(Body::from(rendered))
-            .map_err(Into::into)
-    } else {
-        debug!(?base_path, ?name, "Couldn't find a style there...");
-        Ok(not_found(uri, s).await.into_response())
-    }
-}
+//         Response::builder()
+//             .status(StatusCode::OK)
+//             .header("content-type", "text/css")
+//             .header("cache-control", "public, max-age=31536000, immutable")
+//             .body(Body::from(rendered))
+//             .map_err(Into::into)
+//     } else {
+//         debug!(?base_path, ?name, "Couldn't find a style there...");
+//         Ok(not_found(uri, s).await.into_response())
+//     }
+// }
 
 fn grass_options() -> grass::Options<'static> {
     grass::Options::default().fs(&TokioFs)

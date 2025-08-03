@@ -204,7 +204,7 @@ async fn run() -> color_eyre::Result<()> {
         .route("/list", get(routes::list))
         .route("/tags", get(routes::tags))
         .route("/tag/{name}", get(routes::specific_tag))
-        .route("/style/{path}", get(routes::style))
+        // .route("/style/{path}", get(routes::style)) // We no longer have need for this
         .route("/writing/{*path}", get(routes::writing))
         .fallback(routes::not_found)
         .method_not_allowed_fallback(routes::method_not_allowed)
