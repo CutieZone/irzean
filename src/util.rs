@@ -56,10 +56,14 @@ pub fn slugify_path(path: &Path) -> String {
 }
 
 #[allow(clippy::unnecessary_wraps, clippy::needless_pass_by_value)]
-pub fn writing_url_for(writing: ViaDeserialize<WritingMeta>) -> Result<String, Error> {
+pub fn writing_url_for_jinja(writing: ViaDeserialize<WritingMeta>) -> Result<String, Error> {
     let out = format!("{}/writing/{}", root_url(), slugify_path(&writing.rel_path));
 
     Ok(out)
+}
+
+pub fn writing_url_for(writing: &WritingMeta) -> String {
+    format!("{}/writing/{}", root_url(), slugify_path(&writing.rel_path))
 }
 
 #[allow(clippy::unnecessary_wraps)]

@@ -48,7 +48,7 @@ pub async fn writing(
 
     let tmpl = s.jinja_env.get_template("html/writing.jinja")?;
 
-    let rendered = tmpl.render(templates::Reader::new(writing)?)?;
+    let rendered = tmpl.render(templates::Reader::new(writing))?;
 
     Ok(Html(rendered).into_response())
 }

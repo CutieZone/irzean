@@ -4,7 +4,6 @@ use std::collections::HashMap;
 
 use axum::http::{Method, StatusCode};
 use facet::Facet;
-use minijinja::value::ViaDeserialize;
 use serde::Serialize;
 
 use crate::{
@@ -118,8 +117,8 @@ pub struct Reader {
 }
 
 impl Reader {
-    pub fn new(writing: Writing) -> color_eyre::Result<Self> {
-        Ok(Self {
+    pub fn new(writing: Writing) -> Self {
+        Self {
             title: writing.title.clone(),
             kind: "article".to_string(),
             article: Article {
@@ -128,9 +127,9 @@ impl Reader {
                 tags: writing.tags.clone(),
             },
             description: writing.description.clone(),
-            url: writing_url_for(ViaDeserialize(writing.clone()))?,
+            url: writing_url_for(&writing.meta),
             writing,
-        })
+        }
     }
 }
 
