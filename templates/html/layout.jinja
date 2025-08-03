@@ -1,67 +1,58 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-  {%- if title is defined and title %}
-  <title>Irzean - {{title}}</title>
-  <meta property="og:title" content="Irzean - {{title|e}}" />
-  {%- else %}
-  <title>Irzean</title>
-  <meta property="og:title" content="Irzean" />
-  {%- endif %}
-  <meta name="theme-color" content="#dcb6e4" />
-  <link rel="icon" href="data:image/png;base64,iVB0Rw0KGgo=">
-
-  <meta property="og:site_name" content="Irzean" />
-
-  {%- if type is defined and type %}
-  <meta property="og:type" content="{{type}}" />
-
-  {%- if article is defined and article %}
-  <meta property="og:article:published_time" content="{{article.published_time}}" />
-  <meta property="og:article:author" content="{{article.author}}" />
-  {%- for tag in article.tags%}
-  <meta property="og:article:tag" content="{{tag}}" />
-  {%- endfor %}
-  {%- endif %}
-  {%- else %}
-  <meta property="og:type" content="website" />
-  {%- endif %}
-
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  {%- if description is defined and description %}
-  <meta name="description" content="{{description|e}}" />
-  <meta property="og:description" content="{{description|e}}" />
-  {%- else %}
-  <meta name="description" content="A dumping ground for random writings." />
-  <meta property="og:description" content="A dumping ground for random writings." />
-  {%- endif %}
-
-  {%- if url is defined and url %}
-  <meta property="og:url" content="{{url}}" />
-  {%- endif %}
-
-
-  {%- if environment is defined and environment != "DEV" %}
-  <!-- Sorry for tracking you ;;;;; -->
-  <script defer src="https://umami.cutie.zone/script.js" data-website-id="56951e2c-6ef5-4ca1-bfd8-0d8b5a0d0dfc"></script>
-  {%- endif %}
-
-  <style>{{prerendered_css}}</style>
-  {%- block head %}{%endblock head%}
-</head>
-
-<body>
-  {%- include "html/header.jinja" %}
-  <main>
-    {%- block body %} {% endblock body %}
-  </main>
-  {%- include "html/footer.jinja" %}
-  {%- if scripts %}{%- for script in scripts %}
-  <script lang="{{script.lang}}" src="/script/{{script.path}}"></script>
-  {% endfor %}
-  {% endif %}
+    <head>
+        {%- if title is defined and title %}
+            <title>Irzean - {{ title }}</title>
+            <meta property="og:title" content="Irzean - {{ title|e }}" />
+        {%- else %}
+            <title>Irzean</title>
+            <meta property="og:title" content="Irzean" />
+        {%- endif %}
+        <meta name="theme-color" content="#dcb6e4" />
+        <link rel="icon" href="data:image/png;base64,iVB0Rw0KGgo=">
+        <meta property="og:site_name" content="Irzean" />
+        {%- if type is defined and type %}
+            <meta property="og:type" content="{{ type }}" />
+            {%- if article is defined and article %}
+                <meta property="og:article:published_time"
+                      content="{{ article.published_time }}" />
+                <meta property="og:article:author" content="{{ article.author }}" />
+                {%- for tag in article.tags %}<meta property="og:article:tag" content="{{ tag }}" />{%- endfor %}
+            {%- endif %}
+        {%- else %}
+            <meta property="og:type" content="website" />
+        {%- endif %}
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        {%- if description is defined and description %}
+            <meta name="description" content="{{ description|e }}" />
+            <meta property="og:description" content="{{ description|e }}" />
+        {%- else %}
+            <meta name="description" content="A dumping ground for random writings." />
+            <meta property="og:description"
+                  content="A dumping ground for random writings." />
+        {%- endif %}
+        {%- if url is defined and url %}<meta property="og:url" content="{{ url }}" />{%- endif %}
+        {%- if environment is defined and environment != "DEV" %}
+            <!-- Sorry for tracking you ;;;;; -->
+            <script defer
+                    src="https://umami.cutie.zone/script.js"
+                    data-website-id="56951e2c-6ef5-4ca1-bfd8-0d8b5a0d0dfc"></script>
+        {%- endif %}
+        <style>{{prerendered_css}}</style>
+        {%- block head %}
+        {% endblock head %}
+    </head>
+    <body>
+        {%- include "html/header.jinja" %}
+        <main>
+            {%- block body %}
+            {% endblock body %}
+        </main>
+        {%- include "html/footer.jinja" %}
+        {%- if scripts %}{%- for script in scripts %}
+            <script lang="{{script.lang}}" src="/script/{{script.path}}"></script>
+        {% endfor %}
+    {% endif %}
 </body>
-
 </html>

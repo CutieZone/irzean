@@ -259,7 +259,7 @@ pub struct FrontMatter {
     pub next: Option<String>,
 }
 
-#[derive(Facet)]
+#[derive(Facet, Clone)]
 pub struct WritingCache {
     pub writings: Arc<Vec<Writing>>,
     pub tags: Arc<Vec<String>>,

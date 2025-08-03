@@ -7,6 +7,7 @@ use axum::{Router, routing::get};
 use color_eyre::eyre::{Context, OptionExt};
 use fossil::RepoHandler;
 use minijinja::{Environment, context};
+use tantivy::{Index, IndexReader, ReloadPolicy, schema::Schema};
 use tokio::{net::TcpListener, sync::RwLock, time};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
@@ -78,6 +79,7 @@ async fn main() {
                         .with_file(true)
                         .with_filter(EnvFilter::from_default_env()),
                 )
+                .with(tracing_error::ErrorLayer::default())
                 .init();
 
             Option::<()>::None
@@ -98,6 +100,10 @@ pub struct AppState {
     pub repo_handler: Arc<RwLock<RepoHandler>>,
     pub writing_cache: Arc<RwLock<WritingCache>>,
     pub css_hash: String,
+
+    pub schema: Schema,
+    pub index: Index,
+    pub reader: IndexReader,
 }
 
 impl AppState {
@@ -168,6 +174,28 @@ async fn background_task(
     }
 }
 
+fn build_schema() -> Schema {
+    use tantivy::schema::{FAST, INDEXED, STORED, TEXT};
+    let mut sb = Schema::builder();
+
+    sb.add_text_field("title", TEXT | STORED); // Searchable + returned
+    sb.add_text_field("content", TEXT); // Searchable, not stored
+    sb.add_text_field("description", TEXT | STORED); // Searchable + returned
+
+    sb.add_text_field("tags", TEXT); // For text search within tags
+    sb.add_facet_field("tag", INDEXED); // For exact tag filtering
+
+    sb.add_date_field("date", INDEXED | STORED | FAST);
+    sb.add_bool_field("nsfw", INDEXED | STORED | FAST);
+    sb.add_bool_field("hidden", INDEXED | FAST);
+
+    sb.add_text_field("slug", STORED);
+
+    sb.add_u64_field("word_count", INDEXED | STORED | FAST);
+
+    sb.build()
+}
+
 async fn run() -> color_eyre::Result<()> {
     let port = env::var("IRZEAN_PORT").unwrap_or_else(|_| {
         warn!("No `IRZEAN_PORT` provided: defaulting to port 1337");
@@ -209,15 +237,29 @@ async fn run() -> color_eyre::Result<()> {
     jinja_env.add_global("prerendered_css", &prerendered);
     jinja_env.add_global("parental_mode", parental_mode());
 
+    let schema = build_schema();
+    let index = Index::create_from_tempdir(schema.clone())?;
+    let reader = index
+        .reader_builder()
+        .reload_policy(ReloadPolicy::OnCommitWithDelay)
+        .try_into()?;
+
     let app_state = AppState {
         jinja_env,
         repo_handler,
         writing_cache,
         css_hash,
+
+        schema,
+        index,
+        reader,
     };
+
+    util::reindex(&app_state, app_state.index.writer(50_000_000)?).await?;
 
     let router = Router::new()
         .route("/", get(routes::index))
+        .route("/search", get(routes::search))
         .route("/list", get(routes::list))
         .route("/tags", get(routes::tags))
         .route("/tag/{name}", get(routes::specific_tag))
@@ -267,6 +309,11 @@ fn insert_links(env: &mut Environment<'static>) {
     links.push(context! {
         name => "Home",
         uri => format!("{root_uri}/"),
+        target => "_self",
+    });
+    links.push(context! {
+        name => "Search",
+        uri => format!("{root_uri}/search"),
         target => "_self",
     });
     links.push(context! {

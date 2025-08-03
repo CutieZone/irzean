@@ -1,0 +1,87 @@
+{%- extends "html/layout.jinja" %}
+{%- block body %}
+    {%- if query is defined and query %}
+        <h1>
+            Search results for <code>{{ query }}</code>
+        </h1>
+    {%- else %}
+        <h1>Crappy Search Page</h1>
+    {%- endif %}
+    {%- if error is defined and error %}
+        <h2>
+            Error: <code class="error">{{ error }}</code>
+        </h2>
+    {%- endif %}
+    <form action="{{ url }}" method="GET">
+        {%- if query is defined and query %}
+            <input type="text" placeholder="search here..." name="q" value="{{ query }}" />
+        {%- else %}
+            <input type="text" placeholder="search here..." name="q" />
+        {%- endif %}
+        <input type="submit">
+        Search
+    </input>
+</form>
+{%- if results | length > 0 %}
+    <ul class="flex col writings">
+        {%- for writing in results %}
+            <li>
+                {%- if writing.is_nsfw and not parental_mode %}
+                    <a href="{{ writing_url_for(writing) }}"
+                       target="_self"
+                       referrerpolicy="noreferrer"
+                       class="nsfw">
+                        <h2>{{ writing.title }}</h2>
+                    </a>
+                    <h3>
+                        <code class="nsfw">[NSFW]</code>
+                    </h3>
+                    <code>{{ writing.date_authored }}</code>
+                    {%- if writing.description is defined and writing.description %}
+                        <details>
+                            <summary>Description/Summary</summary>
+                            <p>{{ writing.description }}</p>
+                            <ul class="flex row tags">
+                                {%- for tag in writing.tags %}
+                                    <li class="tag">
+                                        <a href="{{ tag_url_for(tag) }}"
+                                           target="_self"
+                                           referrerpolicy="noreferrer">{{ tag }}</a>
+                                    </li>
+                                {%- endfor %}
+                            </ul>
+                        </details>
+                    {%- endif %}
+                {%- elif writing.is_nsfw and parental_mode %}
+                    <h2>Filtered</h2>
+                {%- else %}
+                    <a href="{{ writing_url_for(writing) }}"
+                       target="_self"
+                       referrerpolicy="noreferrer">
+                        <h2>{{ writing.title }}</h2>
+                    </a>
+                    <code>{{ writing.date_authored }}</code>
+                    {%- if writing.description is defined and writing.description %}
+                        <details>
+                            <summary>Description/Summary</summary>
+                            <p>{{ writing.description }}</p>
+                            <ul class="flex row tags">
+                                {%- for tag in writing.tags %}
+                                    <li class="tag">
+                                        <a href="{{ tag_url_for(tag) }}"
+                                           target="_self"
+                                           referrerpolicy="noreferrer">{{ tag }}</a>
+                                    </li>
+                                {%- endfor %}
+                            </ul>
+                        </details>
+                    {%- endif %}
+                {%- endif %}
+                <hr />
+            </li>
+        {%- endfor %}
+    </ul>
+{%- else %}
+    <h2>There are none :/</h2>
+{%- endif %}
+{%- endblock body %}

@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use axum::http::{Method, StatusCode};
 use facet::Facet;
 use serde::Serialize;
+use tantivy::query::QueryParserError;
 
 use crate::{
     fossil::{Writing, WritingMeta},
@@ -42,6 +43,64 @@ impl Error {
             reason: format!("The method {method} is disallowed on this path."),
             path: path.to_string(),
             url: format!("{}{path}", root_url()),
+        }
+    }
+}
+
+#[derive(Facet, Serialize)]
+pub struct Search {
+    pub title: String,
+    pub query: String,
+    pub results: Vec<WritingMeta>,
+    pub error: Option<String>,
+    pub description: String,
+    pub url: String,
+}
+
+impl Search {
+    pub fn error(query: Option<&String>, error: &QueryParserError) -> Self {
+        Self {
+            title: "Search".to_string(),
+            query: query.cloned().unwrap_or_default(),
+            results: Vec::new(),
+            error: Some(error.to_string()),
+            description: format!(
+                "A search page.{}",
+                query
+                    .as_ref()
+                    .map_or_else(String::new, |query| format!("\n{query}"))
+            ),
+            url: format!(
+                "{}/search{}",
+                root_url(),
+                query.as_ref().map_or_else(String::new, |query| format!(
+                    "?q={}",
+                    urlencoding::encode(query)
+                ))
+            ),
+        }
+    }
+
+    pub fn new(query: Option<&String>, results: Vec<WritingMeta>) -> Self {
+        Self {
+            title: "Search".to_string(),
+            query: query.cloned().unwrap_or_default(),
+            results,
+            error: None,
+            description: format!(
+                "A search page.{}",
+                query
+                    .as_ref()
+                    .map_or_else(String::new, |query| format!("\n{query}"))
+            ),
+            url: format!(
+                "{}/search{}",
+                root_url(),
+                query.as_ref().map_or_else(String::new, |query| format!(
+                    "?q={}",
+                    urlencoding::encode(query)
+                ))
+            ),
         }
     }
 }

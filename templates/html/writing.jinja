@@ -1,61 +1,86 @@
 {%- extends "html/layout.jinja" %}
-
 {%- block body %}
-
-<h1>{{writing.title}}</h1>
-{%- if writing.is_nsfw %}
-<h2 title="This text contains NSFW elements"><code class="nsfw">[NSFW]</code></h2>
-{%- endif %}
-{%- if writing.is_hidden %}
-<h2 title="This is a hidden writing.
-You should probably not link this to others without consent."><code>[HIDDEN]</code></h2>
-{%- endif %}
-<h2><code>{{writing.date_authored}}</code></h2>
-<ul class="flex row tags">
-  {%- for tag in writing.tags %}
-  <li><a href="{{ tag_url_for(tag) }}" target="_blank" referrerpolicy="noreferrer"><code>{{tag}}</code></a></li>
-  {%- endfor %}
-</ul>
-{%- if (writing.previous is defined and writing.previous) or (writing.next is defined and writing.next) %}
-<div class="series-selector flex row">
-  {%- if writing.previous is defined and writing.previous %}
-  <a class="previous" href="{{ writing_url_from(writing.previous)}}" target="_self"
-    referrerpolicy="noreferrer">Previous</a>
-  {%- else %}
-  <a class="previous" title="There is no previous part to this series." disabled target="_self"
-    referrerpolicy="noreferrer">Previous</a>
-  {%- endif %}
-  {%- if writing.next is defined and writing.next %}
-  <a class="next" href="{{ writing_url_from(writing.next)}}" target="_self" referrerpolicy="noreferrer">Next</a>
-  {%- else %}
-  <a class="next" title="There is no next part to this series." disabled target="_self"
-    referrerpolicy="noreferrer">Next</a>
-  {%- endif %}
-</div>
-{%- endif %}
-<hr />
-
-{%- set markdown = to_markdown(writing.content)|safe %}
-<div class="md flex col">
-  {{ markdown }}
-</div>
-
-{%- if (writing.previous is defined and writing.previous) or (writing.next is defined and writing.next) %}
-<hr />
-<div class="series-selector flex row">
-  {%- if writing.previous is defined and writing.previous %}
-  <a class="previous" href="{{ writing_url_from(writing.previous)}}" target="_self"
-    referrerpolicy="noreferrer">Previous</a>
-  {%- else %}
-  <a class="previous" title="There is no previous part to this series." disabled target="_self"
-    referrerpolicy="noreferrer">Previous</a>
-  {%- endif %}
-  {%- if writing.next is defined and writing.next %}
-  <a class="next" href="{{ writing_url_from(writing.next)}}" target="_self" referrerpolicy="noreferrer">Next</a>
-  {%- else %}
-  <a class="next" title="There is no next part to this series." disabled target="_self"
-    referrerpolicy="noreferrer">Next</a>
-  {%- endif %}
-</div>
-{%- endif %}
+    <h1>{{ writing.title }}</h1>
+    {%- if writing.is_nsfw %}
+        <h2 title="This text contains NSFW elements">
+            <code class="nsfw">[NSFW]</code>
+        </h2>
+    {%- endif %}
+    {%- if writing.is_hidden %}
+        <h2 title="This is a hidden writing. You should probably not link this to others without consent.">
+            <code>[HIDDEN]</code>
+        </h2>
+    {%- endif %}
+    <h2>
+        <code>{{ writing.date_authored }}</code>
+    </h2>
+    <ul class="flex row tags">
+        {%- for tag in writing.tags %}
+            <li>
+                <a href="{{ tag_url_for(tag) }}"
+                   target="_blank"
+                   referrerpolicy="noreferrer"><code>{{ tag }}</code></a>
+            </li>
+        {%- endfor %}
+    </ul>
+    {%- if (writing.previous is defined and writing.previous) or (writing.next is defined and writing.next) %}
+        <div class="series-selector flex row">
+            {%- if writing.previous is defined and writing.previous %}
+                <a class="previous"
+                   href="{{ writing_url_from(writing.previous) }}"
+                   target="_self"
+                   referrerpolicy="noreferrer">Previous</a>
+            {%- else %}
+                <a class="previous"
+                   title="There is no previous part to this series."
+                   disabled
+                   target="_self"
+                   referrerpolicy="noreferrer">Previous</a>
+            {%- endif %}
+            {%- if writing.next is defined and writing.next %}
+                <a class="next"
+                   href="{{ writing_url_from(writing.next) }}"
+                   target="_self"
+                   referrerpolicy="noreferrer">Next</a>
+            {%- else %}
+                <a class="next"
+                   title="There is no next part to this series."
+                   disabled
+                   target="_self"
+                   referrerpolicy="noreferrer">Next</a>
+            {%- endif %}
+        </div>
+    {%- endif %}
+    <hr />
+    {%- set markdown = to_markdown(writing.content)|safe %}
+    <div class="md flex col">{{ markdown }}</div>
+    {%- if (writing.previous is defined and writing.previous) or (writing.next is defined and writing.next) %}
+        <hr />
+        <div class="series-selector flex row">
+            {%- if writing.previous is defined and writing.previous %}
+                <a class="previous"
+                   href="{{ writing_url_from(writing.previous) }}"
+                   target="_self"
+                   referrerpolicy="noreferrer">Previous</a>
+            {%- else %}
+                <a class="previous"
+                   title="There is no previous part to this series."
+                   disabled
+                   target="_self"
+                   referrerpolicy="noreferrer">Previous</a>
+            {%- endif %}
+            {%- if writing.next is defined and writing.next %}
+                <a class="next"
+                   href="{{ writing_url_from(writing.next) }}"
+                   target="_self"
+                   referrerpolicy="noreferrer">Next</a>
+            {%- else %}
+                <a class="next"
+                   title="There is no next part to this series."
+                   disabled
+                   target="_self"
+                   referrerpolicy="noreferrer">Next</a>
+            {%- endif %}
+        </div>
+    {%- endif %}
 {%- endblock body %}

@@ -5,14 +5,74 @@ use color_eyre::{Report, eyre::OptionExt};
 use comrak::{Arena, Options, Plugins};
 use minijinja::{Error, ErrorKind, value::ViaDeserialize};
 use slug::slugify;
+use tantivy::{DateTime, IndexWriter, TantivyDocument, schema::Facet};
 use tracing::warn;
 
-use crate::{fossil::WritingMeta, root_url};
+use crate::{AppState, fossil::WritingMeta, parental_mode, root_url};
 
 mod embed;
 mod sitemap;
 pub use embed::{Statics, Templates};
 pub use sitemap::{UrlEntry, render_sitemap};
+
+pub async fn reindex(s: &AppState, mut writer: IndexWriter) -> color_eyre::Result<()> {
+    let sc = s.schema.clone();
+
+    let title = sc.get_field("title")?;
+    let content = sc.get_field("content")?;
+    let tags = sc.get_field("tags")?;
+    let tag = sc.get_field("tag")?;
+    let date = sc.get_field("date")?;
+    let nsfw = sc.get_field("nsfw")?;
+    let hidden = sc.get_field("hidden")?;
+    let slug = sc.get_field("slug")?;
+    let word_count = sc.get_field("word_count")?;
+
+    let cache = s.writing_cache.read().await.clone();
+    // Work on a clone so we don't block the writing cache for too long
+    for writing in cache.writings.iter() {
+        if writing.is_hidden {
+            continue; // skip :3
+        }
+        if parental_mode() && writing.is_nsfw {
+            continue; // skip :3
+        }
+        let mut doc = TantivyDocument::default();
+
+        doc.add_text(title, &writing.title);
+        doc.add_text(content, &writing.content);
+        doc.add_text(tags, writing.tags.join(" "));
+
+        let facets: Vec<_> = writing
+            .tags
+            .iter()
+            .map(|tag| Facet::from(&format!("/tag/{tag}")))
+            .collect();
+
+        for facet in facets {
+            doc.add_facet(tag, facet);
+        }
+
+        doc.add_date(
+            date,
+            DateTime::from_primitive(writing.date_authored.into_real_datetime()?),
+        );
+        doc.add_bool(nsfw, writing.is_nsfw);
+        doc.add_bool(hidden, writing.is_hidden);
+
+        doc.add_text(slug, slugify_path(&writing.rel_path));
+        doc.add_u64(
+            word_count,
+            writing.content.split_whitespace().count().try_into()?,
+        );
+
+        writer.add_document(doc)?;
+    }
+
+    writer.commit()?;
+
+    Ok(())
+}
 
 #[allow(clippy::unnecessary_wraps)]
 pub fn tag_url_for(name: &str) -> Result<String, Error> {

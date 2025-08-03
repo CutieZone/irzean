@@ -80,6 +80,7 @@
           mold
           cargo-watch
           cargo-audit
+          jinja-lsp
 
           cmake
           clang

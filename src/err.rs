@@ -65,6 +65,7 @@ impl fmt::Display for Error {
 
 #[cfg(feature = "production")]
 impl fmt::Display for Error {
+    #[allow(clippy::cognitive_complexity, reason = "disagree :3")]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Jinja(e) => {
@@ -74,22 +75,22 @@ impl fmt::Display for Error {
                 warn!(?e, "IO Error");
             }
             Self::Sass(e) => {
-                warn!(?e, "Sass Error")
+                warn!(?e, "Sass Error");
             }
             Self::Axum(e) => {
-                warn!(?e, "Axum Error")
+                warn!(?e, "Axum Error");
             }
             Self::AxumHttp(e) => {
-                warn!(?e, "Axum HTTP Error")
+                warn!(?e, "Axum HTTP Error");
             }
             Self::AxumHttpHeader(e) => {
                 warn!(?e, "Axum HTTP Header Error");
             }
             Self::ComponentRange(e) => {
-                warn!(?e, "Component Range Error")
+                warn!(?e, "Component Range Error");
             }
             Self::Internal(e) => {
-                warn!(?e, "Internal Error")
+                warn!(?e, "Internal Error");
             }
         }
 
