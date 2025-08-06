@@ -37,7 +37,7 @@ tantivy = "0.24"
 time = { version = "0.3.41", features = ["formatting", "macros", "serde", "serde-human-readable", "serde-well-known"] }
 tokio = { version = "1.43", features = ["full"] }
 tower = { version = "0.5", features = ["full"] }
-tower-http = { version = "0.6", features = ["compression-br", "compression-deflate", "compression-gzip", "compression-zstd", "full"] }
+tower-http = { version = "0.6", features = ["compression-gzip", "trace"] }
 tracing = "0.1"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }

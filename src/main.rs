@@ -269,13 +269,7 @@ async fn run() -> color_eyre::Result<()> {
         .method_not_allowed_fallback(routes::method_not_allowed)
         .with_state(Arc::new(app_state))
         .layer(TraceLayer::new_for_http())
-        .layer(
-            CompressionLayer::new()
-                .gzip(true)
-                .br(true)
-                .deflate(true)
-                .zstd(true),
-        );
+        .layer(CompressionLayer::new().gzip(true));
 
     let listener = TcpListener::bind(addr)
         .await
