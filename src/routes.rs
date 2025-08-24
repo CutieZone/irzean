@@ -275,6 +275,14 @@ pub async fn sitemap(s: State<Arc<AppState>>) -> Result<Response, Error> {
         let last = writings
             .iter()
             .filter_map(|w| {
+                if w.is_hidden {
+                    return None;
+                }
+
+                if parental_mode() && w.is_nsfw {
+                    return None;
+                }
+
                 w.tags
                     .contains(tag)
                     .then_some(w.date_authored.into_real_datetime())
