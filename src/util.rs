@@ -25,6 +25,7 @@ pub async fn reindex(s: &AppState, mut writer: IndexWriter) -> color_eyre::Resul
 
     let sc = s.schema.clone();
     let title = sc.get_field("title")?;
+    let description = sc.get_field("description")?;
     let content = sc.get_field("content")?;
     let tags = sc.get_field("tags")?;
     let tag = sc.get_field("tag")?;
@@ -44,6 +45,11 @@ pub async fn reindex(s: &AppState, mut writer: IndexWriter) -> color_eyre::Resul
         let mut doc = TantivyDocument::default();
 
         doc.add_text(title, &writing.title);
+
+        if let Some(description_text) = &writing.description {
+            doc.add_text(description, description_text);
+        }
+
         doc.add_text(content, &writing.content);
         doc.add_text(tags, writing.tags.join(" "));
 
