@@ -238,7 +238,7 @@ async fn run() -> color_eyre::Result<()> {
     jinja_env.add_global("parental_mode", parental_mode());
 
     let schema = build_schema();
-    let index = Index::create_from_tempdir(schema.clone())?;
+    let index = Index::create_in_ram(schema.clone());
     let reader = index
         .reader_builder()
         .reload_policy(ReloadPolicy::OnCommitWithDelay)
