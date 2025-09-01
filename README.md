@@ -14,6 +14,10 @@ Or... "Renders like a server, loads like a static site"
 - `IRZEAN_CLONE_PATH` (required): where Irzean will store its data
 - `IRZEAN_ROOT_URL` (default `http://0.0.0.0:${IRZEAN_PORT:1337}`): the root url where Irzean is ran
 
+Technically, `IRZEAN_CLONE_PATH` isn't required, and the container can be ran completely ephemerally...
+
+**BUT** there's some flaws with that. Mostly caching.
+
 ## actual Features
 
 - serverside rendered w/ `axum` + `minijinja`
