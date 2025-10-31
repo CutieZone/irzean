@@ -118,7 +118,7 @@ pub fn slugify_path(path: &Path) -> String {
             }
 
             _ => {
-                unimplemented!()
+                continue; // Skip RootDir/CurDir/ParentDir
             }
         }
     }
