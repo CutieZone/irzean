@@ -2,7 +2,7 @@ use std::path::{Component, Path};
 
 use blake3::Hasher;
 use color_eyre::{Report, eyre::OptionExt};
-use comrak::{Arena, Options, Plugins};
+use comrak::{Arena, Options, options::Plugins};
 use minijinja::{Error, ErrorKind, value::ViaDeserialize};
 use slug::slugify;
 use tantivy::{DateTime, IndexWriter, TantivyDocument, schema::Facet};
@@ -97,29 +97,25 @@ pub fn slugify_path(path: &Path) -> String {
         // debug!(?comp, "the component");
         comps += 1;
 
-        match comp {
-            Component::Normal(str) => {
-                if comps > 1 {
-                    out.push('/');
-                }
-
-                let str = str.to_string_lossy().to_string();
-
-                let str = if Path::new(&str)
-                    .extension()
-                    .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
-                {
-                    str.trim_end_matches(".md")
-                } else {
-                    str.as_str()
-                };
-
-                out.push_str(&slugify(str));
+        if let Component::Normal(str) = comp {
+            if comps > 1 {
+                out.push('/');
             }
 
-            _ => {
-                continue; // Skip RootDir/CurDir/ParentDir
-            }
+            let str = str.to_string_lossy().to_string();
+
+            let str = if Path::new(&str)
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("md"))
+            {
+                str.trim_end_matches(".md")
+            } else {
+                str.as_str()
+            };
+
+            out.push_str(&slugify(str));
+        } else {
+            // Skip RootDir/CurDir/ParentDir
         }
     }
 
@@ -180,7 +176,7 @@ pub fn to_markdown(input: &str) -> Result<String, Error> {
 
     let plugins = Plugins::builder().build();
 
-    let mut output = Vec::new();
+    let mut output = String::new();
 
     let root = comrak::parse_document(&arena, input, &options);
 
@@ -191,8 +187,7 @@ pub fn to_markdown(input: &str) -> Result<String, Error> {
         )
     })?;
 
-    String::from_utf8(output)
-        .map_err(|e| Error::new(ErrorKind::SyntaxError, format!("Invalid UTF8. {e}")))
+    Ok(output)
 }
 
 pub fn hash_scss() -> String {

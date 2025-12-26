@@ -6,7 +6,7 @@ edition = "2024"
 resolver = "3"
 
 [profile.release]
-debug = "full" # debug based :3
+debug = "full"  # debug based :3
 lto = true
 opt-level = "s"
 panic = "abort"
@@ -14,27 +14,28 @@ panic = "abort"
 [dependencies]
 async-walkdir = "2.0"
 axum = { version = "0.8", features = ["macros", "multipart"] }
-axum-tracing-opentelemetry = {version = "0.29", optional=true}
 blake3 = "1.5"
 color-eyre = "0.6"
-comrak = "0.40"
-dotenvy = {version ="0.15", optional=true}
-facet = "0.28.0"
-facet-pretty = { version = "0.28.0", features = ["alloc"] }
-facet-yaml = { version = "0.28.0", features = ["std", "alloc"] }
+comrak = "0.49"
+dotenvy = { version = "0.15", optional = true }
+facet = "0.34.0"
+facet-pretty = { version = "0.34.0", features = ["alloc"] }
+facet-yaml = { version = "0.34.0", features = ["std", "alloc"] }
 futures-lite = "2.6"
-git2 = { version = "0.20", features = [
-  "vendored-libgit2",
-  "vendored-openssl",
-] }
+git2 = { version = "0.20", features = ["vendored-libgit2", "vendored-openssl"] }
 grass = "0.13"
-init-tracing-opentelemetry = { version = "0.30", optional=true, default-features=false, features = ["tracing_subscriber_ext", "jaeger", "otlp", "tls-webpki-roots"] }
 minijinja = { version = "2.6", features = ["loader", "speedups"] }
 rust-embed = { version = "8.5", features = ["axum", "compression"] }
 serde = { version = "1.0", features = ["derive"] }
 slug = "0.1"
-tantivy = "0.24"
-time = { version = "0.3.41", features = ["formatting", "macros", "serde", "serde-human-readable", "serde-well-known"] }
+tantivy = "0.25"
+time = { version = "0.3.41", features = [
+  "formatting",
+  "macros",
+  "serde",
+  "serde-human-readable",
+  "serde-well-known",
+] }
 tokio = { version = "1.43", features = ["full"] }
 tower = { version = "0.5", features = ["full"] }
 tower-http = { version = "0.6", features = ["compression-gzip", "trace"] }
@@ -45,5 +46,5 @@ urlencoding = "2.1.3"
 
 [features]
 default = ["production"]
-development = ["dep:axum-tracing-opentelemetry", "dep:dotenvy", "dep:init-tracing-opentelemetry"]
+development = ["dep:dotenvy"]
 production = []

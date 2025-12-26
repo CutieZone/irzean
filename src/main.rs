@@ -1,5 +1,6 @@
 #![warn(clippy::pedantic, clippy::nursery)]
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![allow(clippy::unsafe_derive_deserialize)]
 
 use std::{env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
 
@@ -11,6 +12,9 @@ use tantivy::{Index, IndexReader, ReloadPolicy, schema::Schema};
 use tokio::{net::TcpListener, sync::RwLock, time};
 use tower_http::{compression::CompressionLayer, trace::TraceLayer};
 use tracing::{debug, error, info, warn};
+use tracing_subscriber::{
+    EnvFilter, Layer as _, Registry, fmt, layer::SubscriberExt as _, util::SubscriberInitExt as _,
+};
 use util::Templates;
 
 use crate::{
@@ -33,58 +37,37 @@ async fn main() {
         }
     }
 
-    let _guard = {
-        #[cfg(feature = "development")]
-        {
-            match dotenvy::dotenv() {
-                Ok(_) => {}
-                Err(e) => {
-                    eprintln!("Error setting up dotenvy: {e}");
-                    return;
-                }
+    #[cfg(feature = "development")]
+    {
+        match dotenvy::dotenv() {
+            Ok(_) => {}
+            Err(e) => {
+                eprintln!("Error setting up dotenvy: {e}");
+                return;
             }
-
-            Some(
-                match init_tracing_opentelemetry::tracing_subscriber_ext::init_subscribers() {
-                    Ok(guard) => guard,
-                    Err(e) => {
-                        eprintln!("Error setting up otel: {e}");
-                        return;
-                    }
-                },
-            )
         }
+    }
 
-        #[cfg(not(feature = "development"))]
-        {
-            use tracing_subscriber::{
-                EnvFilter, Layer, Registry, fmt, layer::SubscriberExt, util::SubscriberInitExt,
-            };
-
-            if env::var("RUST_LOG").is_err() {
-                unsafe {
-                    // SAFETY: Required as of Rust 2024, should be fine though
-                    env::set_var("RUST_LOG", "debug");
-                }
-            }
-
-            Registry::default()
-                .with(
-                    fmt::layer()
-                        .pretty()
-                        .with_target(true)
-                        .with_thread_ids(true)
-                        .with_level(true)
-                        .with_line_number(true)
-                        .with_file(true)
-                        .with_filter(EnvFilter::from_default_env()),
-                )
-                .with(tracing_error::ErrorLayer::default())
-                .init();
-
-            Option::<()>::None
+    if env::var("RUST_LOG").is_err() {
+        unsafe {
+            // SAFETY: Required as of Rust 2024, should be fine though
+            env::set_var("RUST_LOG", "debug");
         }
-    };
+    }
+
+    Registry::default()
+        .with(
+            fmt::layer()
+                .pretty()
+                .with_target(true)
+                .with_thread_ids(true)
+                .with_level(true)
+                .with_line_number(true)
+                .with_file(true)
+                .with_filter(EnvFilter::from_default_env()),
+        )
+        .with(tracing_error::ErrorLayer::default())
+        .init();
 
     match run().await {
         Ok(()) => {}
