@@ -2,7 +2,7 @@
 {%- block body %}
     {%- if tag_name is defined and tag_name %}
         <h1>
-            All writings for the tag <code>{{ tag_name }}</code>
+            All writings for the tag <code>{{ tag_name | escape }}</code>
         </h1>
     {%- else %}
         <h1>All writings</h1>
