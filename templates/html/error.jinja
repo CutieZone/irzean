@@ -1,11 +1,11 @@
 {% extends "html/layout.jinja" %}
 {%- block body %}
-    <h1>{%- if error is defined and error %}{{ error }}{%- else %}An error has occurred{% endif %}</h1>
+    <h1>{%- if error is defined and error %}{{ error | escape }}{%- else %}An error has occurred{% endif %}</h1>
         <h2>
-            <code class="error">{{ code }}</code>
+            <code class="error">{{ code | escape }}</code>
         </h2>
-        <h2 class="reason">{{ reason }}</h2>
+        <h2 class="reason">{{ reason | escape }}</h2>
         <h3>
-            <code class="error">{{ path }}</code>
+            <code class="error">{{ path | escape }}</code>
         </h3>
     {% endblock body %}
