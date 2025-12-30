@@ -1,6 +1,5 @@
 use std::path::{Component, Path};
 
-use blake3::Hasher;
 use color_eyre::{Report, eyre::OptionExt};
 use comrak::{Arena, Options, options::Plugins};
 use minijinja::{Error, ErrorKind, value::ViaDeserialize};
@@ -188,23 +187,6 @@ pub fn to_markdown(input: &str) -> Result<String, Error> {
     })?;
 
     Ok(output)
-}
-
-pub fn hash_scss() -> String {
-    let items = Statics::iter().filter(|v| v.ends_with("scss"));
-
-    let mut hasher = Hasher::new();
-
-    for path in items {
-        let Some(data) = Statics::get(&path) else {
-            warn!("No data found for {path}");
-            continue;
-        };
-
-        hasher.update(&data.data);
-    }
-
-    hasher.finalize().to_hex().to_string()
 }
 
 pub fn prerender_css() -> Result<String, crate::err::Error> {

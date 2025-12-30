@@ -11,7 +11,6 @@
 
     n2c = {
       url = "github:nlewo/nix2container";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 

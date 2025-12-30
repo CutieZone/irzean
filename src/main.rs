@@ -82,7 +82,6 @@ pub struct AppState {
     pub jinja_env: Environment<'static>,
     pub repo_handler: Arc<RwLock<RepoHandler>>,
     pub writing_cache: Arc<RwLock<WritingCache>>,
-    pub css_hash: String,
 
     pub schema: Schema,
     pub index: Index,
@@ -128,17 +127,18 @@ async fn background_task(
 
             match new_files {
                 Ok(new_files) => {
-                    let mut writing_cache = writing_cache.write().await;
-
-                    writing_cache.writings = Arc::new(new_files);
-                    writing_cache.tags = Arc::new(
-                        writing_cache
-                            .writings
+                    let new_writings = Arc::new(new_files);
+                    let new_tags = Arc::new(
+                        new_writings
                             .iter()
                             .flat_map(|v| &v.tags)
-                            .map(|v| v.to_lowercase()) // canonicalize :3
+                            .map(|v| v.to_lowercase())
                             .collect(),
                     );
+                    let mut writing_cache = writing_cache.write().await;
+
+                    writing_cache.writings = new_writings;
+                    writing_cache.tags = new_tags;
                 }
                 Err(err) => {
                     warn!(?err, "failed to update cache");
@@ -213,9 +213,6 @@ async fn run() -> color_eyre::Result<()> {
 
     insert_links(&mut jinja_env);
 
-    let css_hash = util::hash_scss();
-
-    jinja_env.add_global("css_hash", &css_hash);
     let prerendered = util::prerender_css()?;
     jinja_env.add_global("prerendered_css", &prerendered);
     jinja_env.add_global("parental_mode", parental_mode());
@@ -231,7 +228,6 @@ async fn run() -> color_eyre::Result<()> {
         jinja_env,
         repo_handler,
         writing_cache,
-        css_hash,
 
         schema,
         index,
