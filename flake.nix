@@ -10,7 +10,7 @@
     crane.url = "github:ipetkov/crane";
 
     n2c = {
-      url = "github:nlewo/nix2container";
+      url = "github:nlewo/nix2container/4f2437f6a1844b843b380d483087ae6d461240ee";
     };
   };
 
