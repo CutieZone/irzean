@@ -2,7 +2,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 #![allow(clippy::unsafe_derive_deserialize)]
 
-use std::{collections::HashMap, env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
+use std::{env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
 
 use axum::{Router, routing::get};
 use color_eyre::eyre::{Context, OptionExt};
@@ -108,11 +108,16 @@ async fn background_task(
     writing_cache: Arc<RwLock<WritingCache>>,
     repo_handler: Arc<RwLock<RepoHandler>>,
 ) {
-    let interval = env::var("IRZEAN_UPDATE_INTERVAL")
-        .map(|v| v.parse().ok())
-        .ok()
-        .flatten()
-        .unwrap_or(60);
+    let interval = match env::var("IRZEAN_UPDATE_INTERVAL") {
+        Ok(v) => match v.parse::<u64>() {
+            Ok(seconds) => seconds,
+            Err(_) => {
+                warn!("Invalid `IRZEAN_UPDATE_INTERVAL` value `{v}`, defaulting to 60");
+                60
+            }
+        },
+        Err(_) => 60,
+    };
 
     let mut interval = time::interval(Duration::from_secs(interval));
 

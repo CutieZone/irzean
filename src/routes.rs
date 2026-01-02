@@ -12,7 +12,7 @@ use axum::{
     http::{Method, StatusCode, Uri},
     response::{Html, IntoResponse, Response},
 };
-use color_eyre::eyre::{Context, OptionExt, eyre};
+use color_eyre::eyre::{Context, OptionExt};
 use serde::{Deserialize, Deserializer, de};
 use tantivy::{TantivyDocument, collector::TopDocs, query::QueryParser, schema::Value};
 use tracing::warn;
@@ -64,14 +64,9 @@ pub async fn search(
 ) -> Result<Html<String>, Error> {
     let tmpl = s.jinja_env.get_template("html/search.jinja")?;
 
-    if query.q.is_none() {
-        let rendered = tmpl.render(templates::Search::new(None, Vec::new()))?;
-
-        return Ok(Html(rendered));
-    }
-
     let Some(query) = query.q else {
-        return Err(Error::Internal(eyre!("oops")));
+        let rendered = tmpl.render(templates::Search::new(None, Vec::new()))?;
+        return Ok(Html(rendered));
     };
 
     let query_str = urlencoding::decode(&query).context("oops")?.to_string();
@@ -138,11 +133,9 @@ pub async fn search(
         }
     };
 
-    let mut top_docs = searcher
+    let top_docs = searcher
         .search(&t_query, &TopDocs::with_limit(10))
         .map_err(color_eyre::Report::from)?;
-
-    top_docs.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
 
     let mut results: Vec<(f32, WritingMeta)> = Vec::new();
 
@@ -279,7 +272,7 @@ pub async fn sitemap(s: State<Arc<AppState>>) -> Result<Response, Error> {
                     return None;
                 }
 
-                if parental_mode() && w.is_nsfw {
+                if parental && w.is_nsfw {
                     return None;
                 }
 
@@ -308,8 +301,6 @@ pub async fn sitemap(s: State<Arc<AppState>>) -> Result<Response, Error> {
 
     for w in writings {
         let realdt = w.meta.date_authored.into_real_datetime()?;
-
-        // debug!(?realdt, "real dt for {}", w.meta.title);
         entries.push(UrlEntry::new(writing_url_for(&w.meta), Some(realdt)));
     }
 
