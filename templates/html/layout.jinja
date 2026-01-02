@@ -33,11 +33,11 @@
                   content="A dumping ground for random writings." />
         {%- endif %}
         {%- if url is defined and url %}<meta property="og:url" content="{{ url }}" />{%- endif %}
-        {%- if environment is defined and environment != "DEV" %}
+        {%- if environment is defined and environment != "DEV" and umami is defined %}
             <!-- Sorry for tracking you ;;;;; -->
             <script defer
-                    src="https://umami.cutie.zone/script.js"
-                    data-website-id="56951e2c-6ef5-4ca1-bfd8-0d8b5a0d0dfc"></script>
+                    src="{{ umami.source }}"
+                    data-website-id="{{ umami.id }}"></script>
         {%- endif %}
         <style>{{prerendered_css}}</style>
         {%- block head %}
@@ -50,9 +50,6 @@
             {% endblock body %}
         </main>
         {%- include "html/footer.jinja" %}
-        {%- if scripts %}{%- for script in scripts %}
-            <script lang="{{script.lang}}" src="/script/{{script.path}}"></script>
-        {% endfor %}
     {% endif %}
 </body>
 </html>

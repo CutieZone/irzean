@@ -2,7 +2,7 @@
 #![deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 #![allow(clippy::unsafe_derive_deserialize)]
 
-use std::{env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
+use std::{collections::HashMap, env, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
 
 use axum::{Router, routing::get};
 use color_eyre::eyre::{Context, OptionExt};
@@ -272,11 +272,6 @@ fn insert_links(env: &mut Environment<'static>) {
         "Using the root URI `{root_uri}`. To override, use the `IRZEAN_ROOT_URL` environment variable"
     );
 
-    #[cfg(feature = "development")]
-    {
-        env.add_global("environment", "DEV");
-    }
-
     let mut links = vec![];
 
     links.push(context! {
@@ -318,6 +313,29 @@ fn insert_links(env: &mut Environment<'static>) {
 
 fn build_jinja_env() -> color_eyre::Result<Environment<'static>> {
     let mut jinja_env = Environment::new();
+
+    #[cfg(feature = "development")]
+    {
+        jinja_env.add_global("environment", "DEV");
+    }
+    #[cfg(feature = "production")]
+    {
+        jinja_env.add_global("environment", "PROD");
+    }
+
+    let umami_src = env::var("IRZEAN_UMAMI_SOURCE");
+    let umami_id = env::var("IRZEAN_UMAMI_ID");
+
+    if let Ok(umami_src) = umami_src
+        && let Ok(umami_id) = umami_id
+    {
+        let umami_val = context! {
+            source => umami_src,
+            id => umami_id,
+        };
+
+        jinja_env.add_global("umami", umami_val);
+    }
 
     let template_paths = Templates::iter().filter(|v| v.starts_with("html/"));
 
