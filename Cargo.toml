@@ -4,6 +4,7 @@ version = "1.0.0"
 publish = false
 edition = "2024"
 resolver = "3"
+license = "Apache-2.0"
 
 [profile.release]
 debug = "full"  # debug based :3
