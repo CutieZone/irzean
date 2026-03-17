@@ -152,7 +152,7 @@ pub async fn search(
         }
     }
 
-    results.sort_by(|(a, _), (b, _)| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+    results.sort_by(|(a, _), (b, _)| b.partial_cmp(a).unwrap_or(Ordering::Equal));
 
     let results = results.into_iter().map(|(_, v)| v).collect();
 
